@@ -24,21 +24,22 @@ from src.models.schema import (
     VideoParams,
     VideoTransitionMode,
 )
-from src.services import llm, voice
+from src.services import llm
 from src.services import task as tm
+from src.services import voice
 from src.utils import utils
 
 st.set_page_config(
-    page_title="MoneyPrinterTurbo",
+    page_title="VideoWind",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="auto",
     menu_items={
-        "Report a bug": "https://github.com/harry0703/MoneyPrinterTurbo/issues",
-        "About": "# MoneyPrinterTurbo\nSimply provide a topic or keyword for a video, and it will "
+        "Report a bug": "https://github.com/garymengcom/videowind/issues",
+        "About": "# VideoWind\nSimply provide a topic or keyword for a video, and it will "
         "automatically generate the video copy, video materials, video subtitles, "
         "and video background music before synthesizing a high-definition short "
-        "video.\n\nhttps://github.com/harry0703/MoneyPrinterTurbo",
+        "video.\n\nhttps://github.com/garymengcom/videowind",
     },
 )
 
@@ -47,7 +48,7 @@ hide_streamlit_style = """
 <style>#root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}</style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-st.title(f"MoneyPrinterTurbo v{config.project_version}")
+st.title(f"VideoWind {config.project_version}")
 
 support_locales = [
     "zh-CN",
@@ -168,7 +169,29 @@ def tr(key):
     return loc.get("Translation", {}).get(key, key)
 
 
-st.write(tr("Get Help"))
+# st.write(tr("Get Help"))
+
+llm_provider = config.app.get("llm_provider", "").lower()
+
+display_languages = []
+selected_index = 0
+for i, code in enumerate(locales.keys()):
+    display_languages.append(f"{code} - {locales[code].get('Language')}")
+    if code == st.session_state["ui_language"]:
+        selected_index = i
+
+# Add language selection to the main menu
+selected_language = st.sidebar.selectbox(
+    tr("Language"), options=display_languages, index=selected_index
+)
+if selected_language:
+    code = selected_language.split(" - ")[0].strip()
+    st.session_state["ui_language"] = code
+    config.ui["language"] = code
+
+# 是否禁用日志显示
+hide_log = st.sidebar.checkbox(tr("Hide Log"), value=config.app.get("hide_log", False))
+config.ui["hide_log"] = hide_log
 
 llm_provider = config.app.get("llm_provider", "").lower()
 
@@ -178,27 +201,6 @@ if not config.app.get("hide_config", False):
         left_config_panel = config_panels[0]
         middle_config_panel = config_panels[1]
         right_config_panel = config_panels[2]
-        with left_config_panel:
-            display_languages = []
-            selected_index = 0
-            for i, code in enumerate(locales.keys()):
-                display_languages.append(f"{code} - {locales[code].get('Language')}")
-                if code == st.session_state["ui_language"]:
-                    selected_index = i
-
-            selected_language = st.selectbox(
-                tr("Language"), options=display_languages, index=selected_index
-            )
-            if selected_language:
-                code = selected_language.split(" - ")[0].strip()
-                st.session_state["ui_language"] = code
-                config.ui["language"] = code
-
-            # 是否禁用日志显示
-            hide_log = st.checkbox(
-                tr("Hide Log"), value=config.app.get("hide_log", False)
-            )
-            config.ui["hide_log"] = hide_log
 
         with middle_config_panel:
             #   openai
