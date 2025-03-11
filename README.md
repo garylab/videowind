@@ -14,5 +14,5 @@ python src/main.py
 
 To start Streamlit app:
 ```bash
-streamlit run ./webui/Main.py --browser.serverAddress="0.0.0.0" --server.enableCORS=True --browser.gatherUsageStats=False
+streamlit run ./streamlit/Main.py --browser.serverAddress="0.0.0.0" --server.enableCORS=True --browser.gatherUsageStats=False
 ```

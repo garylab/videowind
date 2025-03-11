@@ -3,8 +3,9 @@ import platform
 import sys
 from uuid import uuid4
 
-import streamlit as st
 from loguru import logger
+
+import streamlit as st
 
 # Add the root directory of the project to the system path to allow importing modules from the project
 root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -59,10 +60,10 @@ support_locales = [
     "th-TH",
 ]
 
-font_dir = os.path.join(root_dir, "resource", "fonts")
-song_dir = os.path.join(root_dir, "resource", "songs")
-i18n_dir = os.path.join(root_dir, "webui", "i18n")
-config_file = os.path.join(root_dir, "webui", ".streamlit", "webui.toml")
+font_dir = os.path.join(root_dir, "storage", "resource", "fonts")
+song_dir = os.path.join(root_dir, "storage", "resource", "songs")
+i18n_dir = os.path.join(root_dir, "streamlit", "i18n")
+config_file = os.path.join(root_dir, "streamlit", ".streamlit", "webui.toml")
 system_locale = utils.get_system_locale()
 # print(f"******** system locale: {system_locale} ********")
 
