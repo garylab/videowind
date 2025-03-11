@@ -663,17 +663,17 @@ with middle_panel:
                     if os.path.exists(audio_file):
                         os.remove(audio_file)
 
-        if voice.is_azure_v2_voice(voice_name):
-            saved_azure_speech_region = config.azure.get("speech_region", "")
-            saved_azure_speech_key = config.azure.get("speech_key", "")
-            azure_speech_region = st.text_input(
-                tr("Speech Region"), value=saved_azure_speech_region
-            )
-            azure_speech_key = st.text_input(
-                tr("Speech Key"), value=saved_azure_speech_key, type="password"
-            )
-            config.azure["speech_region"] = azure_speech_region
-            config.azure["speech_key"] = azure_speech_key
+        # if voice.is_azure_v2_voice(voice_name):
+        #     saved_azure_speech_region = config.azure.get("speech_region", "")
+        #     saved_azure_speech_key = config.azure.get("speech_key", "")
+        #     azure_speech_region = st.text_input(
+        #         tr("Speech Region"), value=saved_azure_speech_region
+        #     )
+        #     azure_speech_key = st.text_input(
+        #         tr("Speech Key"), value=saved_azure_speech_key, type="password"
+        #     )
+        #     config.azure["speech_region"] = azure_speech_region
+        #     config.azure["speech_key"] = azure_speech_key
 
         params.voice_volume = st.selectbox(
             tr("Speech Volume"),
