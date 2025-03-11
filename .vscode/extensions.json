@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "ms-python.vscode-python-envs",
+        "charliermarsh.ruff",
+        "ms-python.isort",
+        "mikestead.dotenv",
+        "mtxr.sqltools",
+        "k--kato.intellij-idea-keybindings",
+        "usernamehw.errorlens",
+        "github.copilot",
+    ]
+  }
+  
