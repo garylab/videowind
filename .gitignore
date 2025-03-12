@@ -26,3 +26,5 @@ node_modules
 venv/
 .venv
 storage/resource/
+.env
+*.env
