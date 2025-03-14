@@ -167,7 +167,6 @@ def generate_final_videos(
     )
     video_transition_mode = params.video_transition_mode
 
-    _progress = 50
     for i in range(params.video_count):
         index = i + 1
         combined_video_path = path.join(
