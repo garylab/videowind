@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, DateTime, JSON, UniqueConstraint
 
-
+from src.constants.enums import TaskStatus
 from src.db.connection import Base, create_tables
 from src.utils.date_utils import get_now
 
@@ -16,10 +16,11 @@ class BaseModel(Base):
 class Task(BaseModel):
     __tablename__ = "tasks"
 
-    status = Column(Enum("pending", "processing", "completed", "failed"), default="pending")
-    progress = Column(Integer, default=0)
+    status = Column(Integer, default=TaskStatus.INIT.value)
+    stop_at = Column(String(30), nullable=False, default="")
     params = Column(JSON, default={})
     result = Column(JSON, default={})
+    failed_reason = Column(Text, default="")
 
 
 class Clip(BaseModel):

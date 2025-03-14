@@ -3,17 +3,18 @@ import os
 import pathlib
 import shutil
 from typing import Union
-
-from fastapi import BackgroundTasks, Depends, Path, Request, UploadFile
+from fastapi import Depends, Path, Request, UploadFile
 from fastapi.params import File
 from fastapi.responses import FileResponse, StreamingResponse
 from loguru import logger
+from fastapi_pagination import Params
 
 from src.config import config
+from src.constants.enums import StopAt
 from src.controllers import base
-from src.controllers.manager.memory_manager import InMemoryTaskManager
-from src.controllers.manager.redis_manager import RedisTaskManager
 from src.controllers.v1.base import new_router
+from src.db.dao import Dao
+from src.db.models import Task
 from src.models.exception import HttpException
 from src.models.schema import (
     AudioRequest,
@@ -26,89 +27,42 @@ from src.models.schema import (
     TaskResponse,
     TaskVideoRequest,
 )
-from src.services import state as sm
-from src.services import task as tm
 from src.utils import utils
 
 # 认证依赖项
 # router = new_router(dependencies=[Depends(base.verify_token)])
 router = new_router()
 
-_enable_redis = config.app.get("enable_redis", False)
-_redis_host = config.app.get("redis_host", "localhost")
-_redis_port = config.app.get("redis_port", 6379)
-_redis_db = config.app.get("redis_db", 0)
-_redis_password = config.app.get("redis_password", None)
-_max_concurrent_tasks = config.app.get("max_concurrent_tasks", 5)
-
-redis_url = f"redis://:{_redis_password}@{_redis_host}:{_redis_port}/{_redis_db}"
-# 根据配置选择合适的任务管理器
-if _enable_redis:
-    task_manager = RedisTaskManager(
-        max_concurrent_tasks=_max_concurrent_tasks, redis_url=redis_url
-    )
-else:
-    task_manager = InMemoryTaskManager(max_concurrent_tasks=_max_concurrent_tasks)
-
 
 @router.post("/videos", response_model=TaskResponse, summary="Generate a short video")
-def create_video(
-    background_tasks: BackgroundTasks, request: Request, body: TaskVideoRequest
-):
-    return create_task(request, body, stop_at="video")
+def create_video(body: TaskVideoRequest):
+    return create_task(body, stop_at=StopAt.VIDEO)
 
 
 @router.post("/subtitle", response_model=TaskResponse, summary="Generate subtitle only")
-def create_subtitle(
-    background_tasks: BackgroundTasks, request: Request, body: SubtitleRequest
-):
-    return create_task(request, body, stop_at="subtitle")
+def create_subtitle(body: SubtitleRequest):
+    return create_task(body, stop_at=StopAt.SUBTITLE)
 
 
 @router.post("/audio", response_model=TaskResponse, summary="Generate audio only")
-def create_audio(
-    background_tasks: BackgroundTasks, request: Request, body: AudioRequest
-):
-    return create_task(request, body, stop_at="audio")
+def create_audio(body: AudioRequest):
+    return create_task(body, StopAt.AUDIO)
 
 
-def create_task(
-    request: Request,
-    body: Union[TaskVideoRequest, SubtitleRequest, AudioRequest],
-    stop_at: str,
-):
-    task_id = utils.get_uuid()
-    request_id = base.get_task_id(request)
-    try:
-        task = {
-            "task_id": task_id,
-            "request_id": request_id,
-            "params": body.model_dump(),
-        }
-        sm.state.update_task(task_id)
-        task_manager.add_task(tm.start, task_id=task_id, params=body, stop_at=stop_at)
-        logger.success(f"Task created: {utils.to_json(task)}")
-        return utils.get_response(200, task)
-    except ValueError as e:
-        raise HttpException(
-            task_id=task_id, status_code=400, message=f"{request_id}: {str(e)}"
-        )
+def create_task(body: Union[TaskVideoRequest, SubtitleRequest, AudioRequest], stop_at: StopAt):
+    task_id = Dao.add_task(stop_at=stop_at, params=body.model_dump())
+    task = {
+        "task_id": task_id,
+        "params": body.model_dump(),
+    }
+    logger.success(f"Task created: {utils.to_json(task)}")
+    return utils.get_response(200, task)
 
-from fastapi import Query
 
 @router.get("/tasks", response_model=TaskQueryResponse, summary="Get all tasks")
-def get_all_tasks(request: Request, page: int = Query(1, ge=1), page_size: int = Query(10, ge=1)):
-    request_id = base.get_task_id(request)
-    tasks, total = sm.state.get_all_tasks(page, page_size)
-
-    response = {
-        "tasks": tasks,
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-    }
-    return utils.get_response(200, response)
-
+def get_all_tasks(params: Params):
+    page = Dao.get_all_tasks(params)
+    return utils.get_response(200, page)
 
 
 @router.get(
@@ -125,7 +79,7 @@ def get_task(
     endpoint = endpoint.rstrip("/")
 
     request_id = base.get_task_id(request)
-    task = sm.state.get_task(task_id)
+    task: Task = Dao.get_task(task_id)
     if task:
         task_dir = utils.task_dir()
 
@@ -161,16 +115,16 @@ def get_task(
     response_model=TaskDeletionResponse,
     summary="Delete a generated short video task",
 )
-def delete_video(request: Request, task_id: str = Path(..., description="Task ID")):
+def delete_video(request: Request, task_id: int = Path(..., description="Task ID")):
     request_id = base.get_task_id(request)
-    task = sm.state.get_task(task_id)
+    task = Dao.get_task(task_id)
     if task:
         tasks_dir = utils.task_dir()
         current_task_dir = os.path.join(tasks_dir, task_id)
         if os.path.exists(current_task_dir):
             shutil.rmtree(current_task_dir)
 
-        sm.state.delete_task(task_id)
+        Dao.delete_task(task_id)
         logger.success(f"video deleted: {utils.to_json(task)}")
         return utils.get_response(200)
 

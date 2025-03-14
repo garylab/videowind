@@ -17,4 +17,3 @@ def dt_localize(dt_from_db: datetime) -> datetime:
 
 def get_today():
     return get_now().strftime("%Y-%m-%d")
-
