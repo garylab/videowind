@@ -4,10 +4,15 @@ from src.utils.env_utils import get_str, get_int, get_bool
 
 @dataclass
 class AppConfig:
-    host = get_str("SERVER_HOST", "0.0.0.0")
-    port = get_int("SERVER_PORT", 8000)
-    reload = get_bool("SERVER_RELOAD", True)
-    tz = get_str("SERVER_TZ", "UTC")
+    name = get_str("APP_NAME", "VideoWind")
+    description = get_str("APP_DESCRIPTION", "A video processing service")
+    version = get_str("APP_VERSION", "0.0.1")
+
+    host = get_str("APP_HOST", "0.0.0.0")
+    port = get_int("APP_PORT", 8000)
+    reload = get_bool("APP_RELOAD", True)
+    debug_mode = get_bool("APP_DEBUG_MODE", True)
+    tz = get_str("APP_TZ", "UTC")
 
 
 @dataclass

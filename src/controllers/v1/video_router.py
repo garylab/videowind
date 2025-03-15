@@ -11,7 +11,6 @@ from fastapi_pagination import Params
 
 from src.config import config
 from src.constants.enums import StopAt
-from src.controllers import base
 from src.controllers.v1.base import new_router
 from src.db.dao import Dao
 from src.db.models import Task
@@ -22,7 +21,6 @@ from src.models.schema import (
     BgmUploadResponse,
     SubtitleRequest,
     TaskDeletionResponse,
-    TaskQueryRequest,
     TaskQueryResponse,
     TaskResponse,
     TaskVideoRequest,
@@ -71,14 +69,12 @@ def get_all_tasks(params: Params):
 def get_task(
     request: Request,
     task_id: str = Path(..., description="Task ID"),
-    query: TaskQueryRequest = Depends(),
 ):
     endpoint = config.app.get("endpoint", "")
     if not endpoint:
         endpoint = str(request.base_url)
     endpoint = endpoint.rstrip("/")
 
-    request_id = base.get_task_id(request)
     task: Task = Dao.get_task(task_id)
     if task:
         task_dir = utils.task_dir()
@@ -106,7 +102,7 @@ def get_task(
         return utils.get_response(200, task)
 
     raise HttpException(
-        task_id=task_id, status_code=404, message=f"{request_id}: task not found"
+        task_id=task_id, status_code=404, message=f"{task_id}: task not found"
     )
 
 
@@ -115,8 +111,7 @@ def get_task(
     response_model=TaskDeletionResponse,
     summary="Delete a generated short video task",
 )
-def delete_video(request: Request, task_id: int = Path(..., description="Task ID")):
-    request_id = base.get_task_id(request)
+def delete_video(task_id: int = Path(..., description="Task ID")):
     task = Dao.get_task(task_id)
     if task:
         tasks_dir = utils.task_dir()
@@ -129,7 +124,7 @@ def delete_video(request: Request, task_id: int = Path(..., description="Task ID
         return utils.get_response(200)
 
     raise HttpException(
-        task_id=task_id, status_code=404, message=f"{request_id}: task not found"
+        task_id=task_id, status_code=404, message=f"{task_id}: task not found"
     )
 
 
@@ -158,8 +153,7 @@ def get_bgm_list(request: Request):
     response_model=BgmUploadResponse,
     summary="Upload the BGM file to the songs directory",
 )
-def upload_bgm_file(request: Request, file: UploadFile = File(...)):
-    request_id = base.get_task_id(request)
+def upload_bgm_file(file: UploadFile = File(...)):
     # check file ext
     if file.filename.endswith("mp3"):
         song_dir = utils.song_dir()
@@ -173,7 +167,7 @@ def upload_bgm_file(request: Request, file: UploadFile = File(...)):
         return utils.get_response(200, response)
 
     raise HttpException(
-        "", status_code=400, message=f"{request_id}: Only *.mp3 files can be uploaded"
+        "", status_code=400, message=f"Only *.mp3 files can be uploaded"
     )
 
 
