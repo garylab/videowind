@@ -2,33 +2,30 @@ import json
 import os.path
 import re
 from timeit import default_timer as timer
-
 from faster_whisper import WhisperModel
 from loguru import logger
 
-from src.config import config
+from src.constants.config import config
 from src.utils import utils
 
-model_size = config.whisper.get("model_size", "large-v3")
-device = config.whisper.get("device", "cpu")
-compute_type = config.whisper.get("compute_type", "int8")
 model = None
 
 
 def create(audio_file, subtitle_file: str = ""):
     global model
     if not model:
-        model_path = f"{utils.root_dir()}/models/whisper-{model_size}"
-        model_bin_file = f"{model_path}/model.bin"
-        if not os.path.isdir(model_path) or not os.path.isfile(model_bin_file):
-            model_path = model_size
-
         logger.info(
-            f"loading model: {model_path}, device: {device}, compute_type: {compute_type}"
+            f"loading whisper model: {config.AI.whisper_model}, "
+            f"device: {config.AI.whisper_device}, "
+            f"compute_type: {config.AI.whisper_compute_type}"
         )
         try:
             model = WhisperModel(
-                model_size_or_path=model_path, device=device, compute_type=compute_type
+                model_size_or_path=config.AI.whisper_model,
+                device=config.AI.whisper_device,
+                compute_type=config.AI.whisper_compute_type,
+                download_root=config.AI.whisper_download_dir,
+                local_files_only=config.AI.whisper_download_dir.exists(),
             )
         except Exception as e:
             logger.error(
@@ -210,7 +207,7 @@ def correct(subtitle_file, video_script):
             while next_subtitle_index < len(subtitle_items):
                 next_subtitle = subtitle_items[next_subtitle_index][2].strip()
                 if similarity(
-                    script_line, combined_subtitle + " " + next_subtitle
+                        script_line, combined_subtitle + " " + next_subtitle
                 ) > similarity(script_line, combined_subtitle):
                     combined_subtitle += " " + next_subtitle
                     end_time = subtitle_items[next_subtitle_index][1].split(" --> ")[1]
@@ -279,21 +276,38 @@ def correct(subtitle_file, video_script):
 
 
 if __name__ == "__main__":
-    task_id = "c12fd1e6-4b0a-4d65-a075-c87abe35a072"
-    task_dir = utils.task_dir(task_id)
-    subtitle_file = f"{task_dir}/subtitle.srt"
-    audio_file = f"{task_dir}/audio.mp3"
+    local_files_only = config.AI.whisper_download_dir.exists()
+    model = WhisperModel(
+        model_size_or_path=config.AI.whisper_model, device=config.AI.whisper_device, compute_type=config.AI.whisper_compute_type, download_root=config.AI.whisper_download_dir, num_workers=5, local_files_only=local_files_only
+    )
+    segments, info = model.transcribe("/Users/gary/works/VideoWind/tests/files/audios/harvard.wav",
+                                      beam_size=5,
+                                      word_timestamps=True,
+                                      vad_filter=True,
+                                      vad_parameters=dict(min_silence_duration_ms=500), )
 
-    subtitles = file_to_subtitles(subtitle_file)
-    print(subtitles)
+    print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
 
-    script_file = f"{task_dir}/script.json"
-    with open(script_file, "r") as f:
-        script_content = f.read()
-    s = json.loads(script_content)
-    script = s.get("script")
+    for segment in segments:
+        #print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+        print(''.join(f"{word.word}[{word.start} - {word.end}]"
+                  for word in segment.words))
 
-    correct(subtitle_file, script)
-
-    subtitle_file = f"{task_dir}/subtitle-test.srt"
-    create(audio_file, subtitle_file)
+    # task_id = "c12fd1e6-4b0a-4d65-a075-c87abe35a072"
+    # task_dir = utils.task_dir(task_id)
+    # subtitle_file = f"{task_dir}/subtitle.srt"
+    # audio_file = f"{task_dir}/audio.mp3"
+    #
+    # subtitles = file_to_subtitles(subtitle_file)
+    # print(subtitles)
+    #
+    # script_file = f"{task_dir}/script.json"
+    # with open(script_file, "r") as f:
+    #     script_content = f.read()
+    # s = json.loads(script_content)
+    # script = s.get("script")
+    #
+    # correct(subtitle_file, script)
+    #
+    # subtitle_file = f"{task_dir}/subtitle-test.srt"
+    # create(audio_file, subtitle_file)

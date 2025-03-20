@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from src.utils.env_utils import get_str, get_int, get_bool
 
@@ -16,6 +17,19 @@ class AppConfig:
 
 
 @dataclass
+class DirConfig:
+    root_dir: Path = Path(__file__).parent.parent.parent
+    storage_dir: Path = root_dir.joinpath("storage")
+
+
+@dataclass
+class AIConfig:
+    whisper_model: str = get_str("AI_WHISPER_MODEL", "large-v3")
+    whisper_device = get_str("AI_WHISPER_DEVICE", "cpu")
+    whisper_compute_type = get_str("AI_WHISPER_COMPUTE_TYPE", "int8")
+    whisper_download_dir = get_str("AI_WHISPER_DOWNLOAD_DIR", DirConfig.storage_dir.joinpath(f"models/whisper-large-v3"))
+
+@dataclass
 class DatabaseConfig:
     url: str = get_str("DB_URL", "mysql+pymysql://root:12345678@127.0.0.1:3306/videowind")
     pre_ping: bool = get_bool("DB_PRE_PING", True)
@@ -27,7 +41,8 @@ class DatabaseConfig:
 class Config:
     APP: AppConfig = field(default_factory=AppConfig)
     DB: DatabaseConfig = field(default_factory=DatabaseConfig)
-
+    DIR: DirConfig = field(default_factory=DirConfig)
+    AI: AIConfig = field(default_factory=AIConfig)
 
 
 config = Config()
