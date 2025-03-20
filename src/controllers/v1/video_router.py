@@ -48,7 +48,7 @@ def create_audio(body: AudioRequest):
 
 
 def create_task(body: Union[TaskVideoRequest, SubtitleRequest, AudioRequest], stop_at: StopAt):
-    task_id = Dao.add_task(stop_at=stop_at, params=body.model_dump())
+    task_id = Dao.add_task(stop_at=stop_at, params=body)
     task = {
         "task_id": task_id,
         "params": body.model_dump(),

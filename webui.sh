@@ -4,5 +4,5 @@
 # 只需要移除下面一行的注释即可。
 
 # export HF_ENDPOINT=https://hf-mirror.com
-
-streamlit run ./webui/Main.py --browser.serverAddress="0.0.0.0" --server.enableCORS=True --browser.gatherUsageStats=False
+export PYTHONPATH=$PYTHONPATH:.
+streamlit run ./src/streamlit.py --browser.serverAddress="0.0.0.0" --server.enableCORS=True --browser.gatherUsageStats=False

@@ -16,7 +16,7 @@ class BaseModel(Base):
 class Task(BaseModel):
     __tablename__ = "tasks"
 
-    status = Column(Integer, default=TaskStatus.INIT.value)
+    status = Column(String(30), default=TaskStatus.INIT.value)
     stop_at = Column(String(30), nullable=False, default="")
     params = Column(JSON, default={})
     result = Column(JSON, default={})
@@ -54,6 +54,23 @@ class ClipTerm(BaseModel):
     term_id = Column(Integer, ForeignKey("terms.id"), nullable=False)
 
     __table_args__ = (UniqueConstraint("clip_id", "term_id"),)
+
+
+class WordpressWebsite(BaseModel):
+    __tablename__ = "wordpress_websites"
+
+    url = Column(String(255), nullable=False, unique=True)
+    username = Column(String(50), nullable=False, default="")
+    password = Column(String(50), nullable=False, default="")
+
+
+class WordpressPost(BaseModel):
+    __tablename__ = "wordpress_posts"
+
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    post_id = Column(Integer, nullable=False, unique=True)
+
+    status = Column(Integer, default=TaskStatus.INIT.value)
 
 
 if __name__ == '__main__':

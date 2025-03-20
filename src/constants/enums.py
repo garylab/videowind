@@ -21,3 +21,9 @@ class StopAt(StrEnum):
     SCRIPT = "SCRIPT"
     TERMS = "TERMS"
     MATERIALS = "MATERIALS"
+
+
+class PostStatus(StrEnum):
+    FAILED = "FAILED"
+    INIT = "INIT"
+    PUBLISHED = "PUBLISHED"

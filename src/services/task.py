@@ -6,7 +6,7 @@ from os import path
 from loguru import logger
 
 from src.config import config
-from src.constants.enums import TaskStatus
+from src.constants.enums import TaskStatus, StopAt
 from src.db.dao import Dao
 from src.models import const
 from src.models.schema import VideoConcatMode, VideoParams
@@ -201,9 +201,9 @@ def generate_final_videos(
     return final_video_paths, combined_video_paths
 
 
-def start(task_id, params: VideoParams, stop_at: str = "video"):
+def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
+    task_id = Dao.add_task(params, stop_at)
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
-    Dao.update_task(task_id, TaskStatus.STARTED)
 
     if type(params.video_concat_mode) is str:
         params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
@@ -216,7 +216,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
 
     Dao.update_task(task_id, TaskStatus.SCRIPT_GENERATED, {"script": video_script})
     if stop_at == "script":
-        return {"script": video_script}
+        return {"id": task_id, "script": video_script}
 
     # 2. Generate terms
     video_terms = ""
@@ -230,7 +230,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
     Dao.update_task(task_id, TaskStatus.TERMS_GENERATED, {"script": video_script, "terms": video_terms})
 
     if stop_at == "terms":
-        return {"script": video_script, "terms": video_terms}
+        return {"id": task_id, "script": video_script, "terms": video_terms}
 
     # 3. Generate audio
     audio_file, audio_duration, sub_maker = generate_audio(
@@ -242,6 +242,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         return
 
     Dao.update_task(task_id, TaskStatus.AUDIO_GENERATED, {
+        "id": task_id,
         "script": video_script,
         "terms": video_terms,
         "audio_file": audio_file,
@@ -249,13 +250,14 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
     })
 
     if stop_at == "audio":
-        return {"audio_file": audio_file, "audio_duration": audio_duration}
+        return {"id": task_id, "audio_file": audio_file, "audio_duration": audio_duration}
 
     # 4. Generate subtitle
     subtitle_path = generate_subtitle(
         task_id, params, video_script, sub_maker, audio_file
     )
     Dao.update_task(task_id, TaskStatus.SUBTITLE_GENERATED, {
+        "id": task_id,
         "script": video_script,
         "terms": video_terms,
         "audio_file": audio_file,
@@ -264,7 +266,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
     })
 
     if stop_at == "subtitle":
-        return {"subtitle_path": subtitle_path}
+        return {"id": task_id, "subtitle_path": subtitle_path}
 
     # 5. Get video materials
     downloaded_videos = get_video_materials(
@@ -275,6 +277,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         return
 
     Dao.update_task(task_id, TaskStatus.CLIPS_DOWNLOADED, {
+        "id": task_id,
         "script": video_script,
         "terms": video_terms,
         "audio_file": audio_file,
@@ -283,7 +286,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         "materials": downloaded_videos
     })
     if stop_at == "materials":
-        return {"materials": downloaded_videos}
+        return {"id": task_id, "materials": downloaded_videos}
 
     # 6. Generate final videos
     final_video_paths, combined_video_paths = generate_final_videos(
@@ -299,6 +302,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
     )
 
     result = {
+        "id": task_id,
         "videos": final_video_paths,
         "combined_videos": combined_video_paths,
         "script": video_script,

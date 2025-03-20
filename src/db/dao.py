@@ -2,6 +2,7 @@ from turtle import update
 
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate
+from pydantic import BaseModel
 
 from src.constants.enums import StopAt, TaskStatus
 from src.db.connection import SessionLocal
@@ -21,8 +22,8 @@ class Dao:
             return paginate(session, query, params)
 
     @staticmethod
-    def add_task(stop_at: StopAt, params: dict) -> int:
-        task = Task(stop_at=stop_at.value, params=params)
+    def add_task(params: BaseModel, stop_at: StopAt) -> int:
+        task = Task(stop_at=stop_at.value, params=params.model_dump())
         with SessionLocal() as session:
             session.add(task)
             session.commit()

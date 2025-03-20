@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from src.utils.env_utils import get_str, get_int, get_bool
+from dotenv import load_dotenv
+
+from src.utils.env_utils import get_bool, get_int, get_str
+
 
 @dataclass
 class AppConfig:
@@ -29,6 +32,14 @@ class AIConfig:
     whisper_compute_type = get_str("AI_WHISPER_COMPUTE_TYPE", "int8")
     whisper_download_dir = get_str("AI_WHISPER_DOWNLOAD_DIR", DirConfig.storage_dir.joinpath(f"models/whisper-large-v3"))
 
+
+@dataclass
+class WordPressConfig:
+    url: str = get_str("WP_URL", "")
+    username: str = get_str("WP_USERNAME", "")
+    password: str = get_str("WP_PASSWORD", "")
+
+
 @dataclass
 class DatabaseConfig:
     url: str = get_str("DB_URL", "mysql+pymysql://root:12345678@127.0.0.1:3306/videowind")
@@ -43,6 +54,8 @@ class Config:
     DB: DatabaseConfig = field(default_factory=DatabaseConfig)
     DIR: DirConfig = field(default_factory=DirConfig)
     AI: AIConfig = field(default_factory=AIConfig)
+    WP: WordPressConfig = field(default_factory=WordPressConfig)
 
 
+load_dotenv()
 config = Config()

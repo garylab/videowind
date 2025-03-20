@@ -8,7 +8,7 @@
 /app/models/__pycache__/
 /app/utils/__pycache__/
 /*/__pycache__/*
-/**/.streamlit
+/.streamlit
 __pycache__
 logs/
 
