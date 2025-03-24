@@ -56,7 +56,7 @@ app.mount("/", StaticFiles(directory=public_dir, html=True), name="")
 if __name__ == "__main__":
     logger.info(f"start server, docs: http://{config.APP.host}:{config.APP.port}/docs")
     uvicorn.run(
-        app="src.main:app",
+        app="src.api:app",
         host=config.APP.host,
         port=config.APP.port,
         reload=config.APP.reload,
