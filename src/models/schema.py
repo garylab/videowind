@@ -53,6 +53,18 @@ class MaterialInfo:
     duration: int = 0
 
 
+@pydantic.dataclasses.dataclass(config=_Config)
+class VideoClip:
+    provider: str
+    original_id: str
+    url: str
+    duration: int
+    thumbnail: str
+    width: int
+    height: int
+    description: str
+
+
 class VideoParams(BaseModel):
     """
     {
