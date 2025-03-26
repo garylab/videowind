@@ -45,6 +45,9 @@ def create_text_clip(subtitle_item, video_dimension: VideoDimension, sub_style: 
     wrapped_txt, txt_height = wrap_text(
         phrase, max_width=max_width, font=sub_style.font_path, fontsize=sub_style.font_size
     )
+    interline = int(sub_style.font_size * 0.25)
+    size=(int(max_width), int(txt_height + sub_style.font_size * 0.25 + (interline * (wrapped_txt.count("\n") + 1))))
+
     _clip = TextClip(
         text=wrapped_txt,
         font=sub_style.font_path,
@@ -53,6 +56,8 @@ def create_text_clip(subtitle_item, video_dimension: VideoDimension, sub_style: 
         bg_color=sub_style.text_background_color,
         stroke_color=sub_style.stroke_color,
         stroke_width=sub_style.stroke_width,
+        interline=interline,
+        size=size,
     )
     duration = subtitle_item[0][1] - subtitle_item[0][0]
     _clip = _clip.with_start(subtitle_item[0][0])

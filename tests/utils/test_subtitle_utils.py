@@ -11,7 +11,7 @@ def test_add_subtitle():
     video_dimension = VideoDimension(width=1280, height=720)
 
     font_path = FONTS_DIR.joinpath("JosefinSans-Light.ttf").as_posix()
-    subtitle_path = SUBTITLES_DIR.joinpath("subtitle-9s.srt").as_posix()
+    subtitle_path = SUBTITLES_DIR.joinpath("subtitle-22s.srt").as_posix()
     sub_style = SubtitleStyle(
         position="bottom",
         custom_position=0,
@@ -24,7 +24,7 @@ def test_add_subtitle():
     )
     clip = add_subtitle(video_clip, video_dimension, subtitle_path, sub_style)
 
-    expected_output_file = config.DIR.storage_dir.joinpath(f"temp/test-{test_filename}")
+    expected_output_file = config.DIR.storage_dir.joinpath(f"temp/test2-{test_filename}")
     clip.write_videofile(
         expected_output_file.as_posix(),
         audio_codec="aac",
