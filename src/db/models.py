@@ -26,11 +26,10 @@ class Task(BaseModel):
 class Clip(BaseModel):
     __tablename__ = "clips"
 
-    source_name = Column(String(30), nullable=False, default="")
-    source_id = Column(String(50), nullable=False, default="")
+    provider = Column(String(30), nullable=False, default="")
+    original_id = Column(String(50), nullable=False, default="")
 
     path = Column(String(255), nullable=False, unique=True, default="")
-
     url = Column(String(255), nullable=False, default="")
     thumbnail = Column(String(255), nullable=False, default="")
     width = Column(Integer, nullable=False, default=0)
@@ -38,7 +37,7 @@ class Clip(BaseModel):
     duration = Column(Integer, nullable=False, default=0)
     description = Column(Text, default="")
 
-    __table_args__ = (UniqueConstraint("source_name", "source_id"),)
+    __table_args__ = (UniqueConstraint("provider", "original_id"),)
 
 
 class Term(BaseModel):
