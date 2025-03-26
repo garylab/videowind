@@ -10,13 +10,10 @@ from moviepy import (
     CompositeAudioClip,
     CompositeVideoClip,
     ImageClip,
-    TextClip,
     VideoFileClip,
     afx,
     concatenate_videoclips,
 )
-from moviepy.video.tools.subtitles import SubtitlesClip
-from PIL import ImageFont
 
 from src.models import const
 from src.models.schema import (
@@ -28,6 +25,7 @@ from src.models.schema import (
 )
 from src.services.utils import video_effects
 from src.utils import utils
+from src.utils.subtitle_utils import add_subtitle, VideoDimension, SubtitleStyle
 
 
 def get_bgm_file(bgm_type: str = "random", bgm_file: str = ""):
@@ -182,64 +180,6 @@ def combine_videos(
     return combined_video_path
 
 
-def wrap_text(text, max_width, font="Arial", fontsize=60):
-    # Create ImageFont
-    font = ImageFont.truetype(font, fontsize)
-
-    def get_text_size(inner_text):
-        inner_text = inner_text.strip()
-        left, top, right, bottom = font.getbbox(inner_text)
-        return right - left, bottom - top
-
-    width, height = get_text_size(text)
-    if width <= max_width:
-        return text, height
-
-    # logger.warning(f"wrapping text, max_width: {max_width}, text_width: {width}, text: {text}")
-
-    processed = True
-
-    _wrapped_lines_ = []
-    words = text.split(" ")
-    _txt_ = ""
-    for word in words:
-        _before = _txt_
-        _txt_ += f"{word} "
-        _width, _height = get_text_size(_txt_)
-        if _width <= max_width:
-            continue
-        else:
-            if _txt_.strip() == word.strip():
-                processed = False
-                break
-            _wrapped_lines_.append(_before)
-            _txt_ = f"{word} "
-    _wrapped_lines_.append(_txt_)
-    if processed:
-        _wrapped_lines_ = [line.strip() for line in _wrapped_lines_]
-        result = "\n".join(_wrapped_lines_).strip()
-        height = len(_wrapped_lines_) * height
-        # logger.warning(f"wrapped text: {result}")
-        return result, height
-
-    _wrapped_lines_ = []
-    chars = list(text)
-    _txt_ = ""
-    for word in chars:
-        _txt_ += word
-        _width, _height = get_text_size(_txt_)
-        if _width <= max_width:
-            continue
-        else:
-            _wrapped_lines_.append(_txt_)
-            _txt_ = ""
-    _wrapped_lines_.append(_txt_)
-    result = "\n".join(_wrapped_lines_).strip()
-    height = len(_wrapped_lines_) * height
-    # logger.warning(f"wrapped text: {result}")
-    return result, height
-
-
 def generate_video(
     video_path: str,
     audio_path: str,
@@ -271,66 +211,24 @@ def generate_video(
 
         logger.info(f"using font: {font_path}")
 
-    def create_text_clip(subtitle_item):
-        params.font_size = int(params.font_size)
-        params.stroke_width = int(params.stroke_width)
-        phrase = subtitle_item[1]
-        max_width = video_width * 0.9
-        wrapped_txt, txt_height = wrap_text(
-            phrase, max_width=max_width, font=font_path, fontsize=params.font_size
-        )
-        _clip = TextClip(
-            text=wrapped_txt,
-            font=font_path,
-            font_size=params.font_size,
-            color=params.text_fore_color,
-            bg_color=params.text_background_color,
-            stroke_color=params.stroke_color,
-            stroke_width=params.stroke_width,
-        )
-        duration = subtitle_item[0][1] - subtitle_item[0][0]
-        _clip = _clip.with_start(subtitle_item[0][0])
-        _clip = _clip.with_end(subtitle_item[0][1])
-        _clip = _clip.with_duration(duration)
-        if params.subtitle_position == "bottom":
-            _clip = _clip.with_position(("center", video_height * 0.95 - _clip.h))
-        elif params.subtitle_position == "top":
-            _clip = _clip.with_position(("center", video_height * 0.05))
-        elif params.subtitle_position == "custom":
-            # Ensure the subtitle is fully within the screen bounds
-            margin = 10  # Additional margin, in pixels
-            max_y = video_height - _clip.h - margin
-            min_y = margin
-            custom_y = (video_height - _clip.h) * (params.custom_position / 100)
-            custom_y = max(
-                min_y, min(custom_y, max_y)
-            )  # Constrain the y value within the valid range
-            _clip = _clip.with_position(("center", custom_y))
-        else:  # center
-            _clip = _clip.with_position(("center", "center"))
-        return _clip
-
     video_clip = VideoFileClip(video_path)
     audio_clip = AudioFileClip(audio_path).with_effects(
         [afx.MultiplyVolume(params.voice_volume)]
     )
 
-    def make_textclip(text):
-        return TextClip(
-            text=text,
-            font=font_path,
-            font_size=params.font_size,
-        )
-
     if subtitle_path and os.path.exists(subtitle_path):
-        sub = SubtitlesClip(
-            subtitles=subtitle_path, encoding="utf-8", make_textclip=make_textclip
+        dimension = VideoDimension(width=video_width, height=video_height)
+        sub_style = SubtitleStyle(
+            position=params.subtitle_position,
+            custom_position=int(params.custom_position),
+            font_path=font_path,
+            font_size=params.font_size,
+            text_fore_color=params.text_fore_color,
+            text_background_color=params.text_background_color,
+            stroke_color=params.stroke_color,
+            stroke_width=int(params.stroke_width),
         )
-        text_clips = []
-        for item in sub.subtitles:
-            clip = create_text_clip(subtitle_item=item)
-            text_clips.append(clip)
-        video_clip = CompositeVideoClip([video_clip, *text_clips])
+        add_subtitle(video_clip, dimension, subtitle_path, sub_style)
 
     bgm_file = get_bgm_file(bgm_type=params.bgm_type, bgm_file=params.bgm_file)
     if bgm_file:
