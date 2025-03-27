@@ -39,7 +39,7 @@ class PixabayService(ClipBase):
                 if v["duration"] < minimum_duration:
                     continue
 
-                if item := self._parse_one_clip(v, video_aspect):
+                if item := self._parse_one(v, video_aspect):
                     video_items.append(item)
 
             return video_items
@@ -48,7 +48,7 @@ class PixabayService(ClipBase):
 
         return []
 
-    def _parse_one_clip(self, search_item: dict, aspect: VideoAspect) -> Optional[VideoClip]:
+    def _parse_one(self, search_item: dict, aspect: VideoAspect) -> Optional[VideoClip]:
         aspect = VideoAspect(aspect)
         video_width, video_height = aspect.to_resolution()
 
@@ -61,7 +61,8 @@ class PixabayService(ClipBase):
                 return VideoClip(
                     provider=self.name,
                     original_id=str(search_item["id"]),
-                    url=video["url"],
+                    url=search_item["pageURL"],
+                    video_file_url=video["url"],
                     duration=search_item["duration"],
                     thumbnail=video["thumbnail"],
                     width=w,
