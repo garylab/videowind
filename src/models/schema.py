@@ -58,10 +58,13 @@ class VideoClip:
     provider: str
     original_id: str
     url: str
+    video_file_url: str
     duration: int
     thumbnail: str
     width: int
     height: int
+    size: int
+    content_type: str
     description: str
 
 

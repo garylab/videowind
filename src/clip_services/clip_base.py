@@ -16,4 +16,4 @@ class ClipBase:
                      minimum_duration: int,
                      video_aspect: VideoAspect = VideoAspect.portrait,
                      ) -> List[VideoClip]:
-        pass
+        raise NotImplementedError
