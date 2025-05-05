@@ -11,7 +11,7 @@ from src.constants.enums import StopAt
 from src.crud.task_crud import TaskCrud
 from src.db.models import Task
 from src.models.exception import HttpException
-from src.models.schema import TaskDeletionResponse, TaskQueryResponse, TaskResponse, TaskVideoRequest, SubtitleRequest, \
+from src.models.schema import TaskDeletionResponse, TaskQueryResponse, TaskIdOut, TaskVideoRequest, SubtitleRequest, \
     AudioRequest
 from src.services.task import start
 from src.utils import utils
@@ -19,32 +19,25 @@ from src.utils import utils
 router = APIRouter(tags=["Task"], prefix="/tasks")
 
 
-def create_task(body: Union[TaskVideoRequest, SubtitleRequest, AudioRequest], stop_at: StopAt):
-    task_id = TaskCrud.add_task(stop_at=stop_at, params=body)
-    task = {
-        "task_id": task_id,
-        "params": body.model_dump(),
-    }
-    logger.success(f"Task created: {utils.to_json(task)}")
-    return utils.get_response(200, task)
-
-
-@router.post("/audio", response_model=TaskResponse, summary="Generate audio task")
+@router.post("/audio", response_model=TaskIdOut, summary="Generate audio task")
 def create_audio(body: AudioRequest, background_tasks: BackgroundTasks):
-    background_tasks.add_task(start, body, StopAt.AUDIO)
-    return create_task(body, StopAt.AUDIO)
+    task_id = TaskCrud.add_task(params=body, stop_at=StopAt.AUDIO)
+    background_tasks.add_task(start, task_id, body, StopAt.AUDIO)
+    return TaskIdOut(task_id=task_id)
 
 
-@router.post("/subtitle", response_model=TaskResponse, summary="Generate audio and subtitle task")
+@router.post("/subtitle", response_model=TaskIdOut, summary="Generate audio and subtitle task")
 def create_subtitle(body: SubtitleRequest, background_tasks: BackgroundTasks):
-    background_tasks.add_task(start, body, StopAt.SUBTITLE)
-    return create_task(body, stop_at=StopAt.SUBTITLE)
+    task_id = TaskCrud.add_task(params=body, stop_at=StopAt.SUBTITLE)
+    background_tasks.add_task(start, task_id, body, StopAt.SUBTITLE)
+    return TaskIdOut(task_id=task_id)
 
 
-@router.post("/videos", response_model=TaskResponse, summary="Generate audio, subtitle and video task")
+@router.post("/videos", response_model=TaskIdOut, summary="Generate audio, subtitle and video task")
 def create_video(body: TaskVideoRequest, background_tasks: BackgroundTasks):
-    background_tasks.add_task(start, body, StopAt.VIDEO)
-    return create_task(body, stop_at=StopAt.VIDEO)
+    task_id = TaskCrud.add_task(params=body, stop_at=StopAt.VIDEO)
+    background_tasks.add_task(start, task_id, body, StopAt.VIDEO)
+    return TaskIdOut(task_id=task_id)
 
 
 @router.get("", response_model=TaskQueryResponse, summary="Get all tasks")

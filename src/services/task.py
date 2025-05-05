@@ -2,6 +2,7 @@ import math
 import os.path
 import re
 from os import path
+from typing import Union
 
 from loguru import logger
 
@@ -9,7 +10,7 @@ from src.config import config
 from src.constants.enums import TaskStatus, StopAt
 from src.crud.task_crud import TaskCrud
 from src.models import const
-from src.models.schema import VideoConcatMode, VideoParams
+from src.models.schema import VideoConcatMode, VideoParams, AudioRequest, SubtitleRequest
 from src.services import llm, material, subtitle, video, voice
 from src.utils import utils
 
@@ -201,8 +202,8 @@ def generate_final_videos(
     return final_video_paths, combined_video_paths
 
 
-def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
-    task_id = TaskCrud.add_task(params, stop_at)
+def start(task_id: str, params: Union[VideoParams, AudioRequest, SubtitleRequest], stop_at: StopAt = StopAt.VIDEO):
+    # task_id = TaskCrud.add_task(params, stop_at)
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
 
     # 1. Generate script
