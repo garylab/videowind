@@ -204,12 +204,10 @@ class VideoTermsRequest(VideoTermsParams, BaseModel):
     pass
 
 
-class TaskOut(BaseModel):
+class TaskLiteOut(BaseModel):
     id: str
     status: str
     params: dict
-    result: Optional[dict] = None
-    failed_reason: Optional[str] = None
 
     # convert uuid to string for id
     @pydantic.field_validator("id", mode="before")
@@ -223,6 +221,11 @@ class TaskOut(BaseModel):
         from_attributes = True
         populate_by_name = True
         use_enum_values = True
+
+class TaskOut(TaskLiteOut):
+    result: Optional[dict] = None
+    failed_reason: Optional[str] = None
+
 
 class TaskIdOut(BaseModel):
     task_id: str

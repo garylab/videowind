@@ -3,7 +3,7 @@ import shutil
 from typing import Union
 from fastapi import Depends, Path, Request, BackgroundTasks
 from loguru import logger
-from fastapi_pagination import Params
+from fastapi_pagination import Params, Page
 from fastapi import APIRouter
 
 from src.config import config
@@ -12,7 +12,7 @@ from src.crud.task_crud import TaskCrud
 from src.db.models import Task
 from src.models.exception import HttpException
 from src.models.schema import TaskDeletionResponse, TaskQueryResponse, TaskIdOut, TaskVideoRequest, SubtitleRequest, \
-    AudioRequest, TaskStatusOut, TaskOut
+    AudioRequest, TaskStatusOut, TaskOut, TaskLiteOut
 from src.services.task import start
 from src.utils import utils
 
@@ -40,10 +40,11 @@ def create_video(body: TaskVideoRequest, background_tasks: BackgroundTasks):
     return TaskIdOut(task_id=task_id)
 
 
-@router.get("", response_model=TaskQueryResponse, summary="Get all tasks")
-def get_all_tasks(params: Params):
-    page = TaskCrud.get_all_tasks(params)
-    return utils.get_response(200, page)
+@router.get("", response_model=Page[TaskLiteOut], summary="Get all tasks")
+def get_all_tasks(params: Params = Depends()):
+    page: Page[Task] = TaskCrud.get_all_tasks(params)
+    page.items = [TaskLiteOut.model_validate(task) for task in page.items]
+    return page
 
 
 @router.get("/{task_id}", response_model=TaskOut, summary="Query task")
