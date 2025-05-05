@@ -8,8 +8,9 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 import uvicorn
 
+from src.controllers import ping_router
 from src.controllers.exception_handlers import exception_handler, validation_exception_handler
-from src.controllers.v1 import video_router, llm_router
+from src.controllers.v1 import llm_router, task_router, music_router, download_router
 from src.models.exception import HttpException
 from src.utils import utils
 from src.constants.config import AppConfig
@@ -27,8 +28,13 @@ app = FastAPI(
     debug=AppConfig.debug_mode,
     lifespan=lifespan
 )
-app.include_router(video_router.router)
+app.include_router(ping_router.router)
+app.include_router(task_router.router)
 app.include_router(llm_router.router)
+app.include_router(music_router.router)
+app.include_router(download_router.router)
+
+
 app.add_exception_handler(HttpException, exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 

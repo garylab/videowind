@@ -1,6 +1,5 @@
 from fastapi import Request
-
-from src.controllers.v1.base import new_router
+from fastapi import APIRouter
 from src.models.schema import (
     VideoScriptRequest,
     VideoScriptResponse,
@@ -12,7 +11,7 @@ from src.utils import utils
 
 # authentication dependency
 # router = new_router(dependencies=[Depends(base.verify_token)])
-router = new_router()
+router = APIRouter(tags=["LLM"], prefix="/llm")
 
 
 @router.post(
