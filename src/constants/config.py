@@ -23,7 +23,7 @@ class AppConfig:
 
 @dataclass
 class DbConfig:
-    url: str = get_str("DB_URL", "mysql+pymysql://root:12345678@127.0.0.1:3306/videowind")
+    url: str = get_str("DB_URL")
     pre_ping: bool = get_bool("DB_PRE_PING", True)
     pool_size: int = get_int("DB_POOL_SIZE", 5)
     max_overflow: int = get_int("DB_MAX_OVERFLOW", 10)
