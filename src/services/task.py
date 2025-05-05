@@ -205,9 +205,6 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
     task_id = TaskCrud.add_task(params, stop_at)
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
 
-    if type(params.video_concat_mode) is str:
-        params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
-
     # 1. Generate script
     video_script = generate_script(task_id, params)
     if not video_script or "Error: " in video_script:
@@ -215,7 +212,7 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
         return
 
     TaskCrud.update_task(task_id, TaskStatus.SCRIPT_GENERATED, {"script": video_script})
-    if stop_at == "script":
+    if stop_at == StopAt.SCRIPT:
         return {"id": task_id, "script": video_script}
 
     # 2. Generate terms
@@ -229,7 +226,7 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
     save_script_data(task_id, video_script, video_terms, params)
     TaskCrud.update_task(task_id, TaskStatus.TERMS_GENERATED, {"script": video_script, "terms": video_terms})
 
-    if stop_at == "terms":
+    if stop_at == StopAt.TERMS:
         return {"id": task_id, "script": video_script, "terms": video_terms}
 
     # 3. Generate audio
@@ -249,7 +246,7 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
         "audio_duration": audio_duration
     })
 
-    if stop_at == "audio":
+    if stop_at == StopAt.AUDIO:
         return {"id": task_id, "audio_file": audio_file, "audio_duration": audio_duration}
 
     # 4. Generate subtitle
@@ -265,8 +262,11 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
         "subtitle_path": subtitle_path
     })
 
-    if stop_at == "subtitle":
+    if stop_at == StopAt.SUBTITLE:
         return {"id": task_id, "subtitle_path": subtitle_path}
+
+    if type(params.video_concat_mode) is str:
+        params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
 
     # 5. Get video materials
     downloaded_videos = get_video_materials(
@@ -285,7 +285,7 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
         "subtitle_path": subtitle_path,
         "materials": downloaded_videos
     })
-    if stop_at == "materials":
+    if stop_at == StopAt.MATERIALS:
         return {"id": task_id, "materials": downloaded_videos}
 
     # 6. Generate final videos
@@ -323,4 +323,4 @@ if __name__ == "__main__":
         voice_name="zh-CN-XiaoyiNeural-Female",
         voice_rate=1.0,
     )
-    start(task_id, params, stop_at="video")
+    start(task_id, params, stop_at=StopAt.VIDEO)

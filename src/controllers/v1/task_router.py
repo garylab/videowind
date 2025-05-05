@@ -36,12 +36,14 @@ def create_audio(body: AudioRequest, background_tasks: BackgroundTasks):
 
 
 @router.post("/subtitle", response_model=TaskResponse, summary="Generate audio and subtitle task")
-def create_subtitle(body: SubtitleRequest):
+def create_subtitle(body: SubtitleRequest, background_tasks: BackgroundTasks):
+    background_tasks.add_task(start, body, StopAt.SUBTITLE)
     return create_task(body, stop_at=StopAt.SUBTITLE)
 
 
 @router.post("/videos", response_model=TaskResponse, summary="Generate audio, subtitle and video task")
-def create_video(body: TaskVideoRequest):
+def create_video(body: TaskVideoRequest, background_tasks: BackgroundTasks):
+    background_tasks.add_task(start, body, StopAt.VIDEO)
     return create_task(body, stop_at=StopAt.VIDEO)
 
 

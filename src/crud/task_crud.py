@@ -26,15 +26,15 @@ class TaskCrud:
             return paginate(session, query, params)
 
     @staticmethod
-    def add_task(params: BaseModel, stop_at: StopAt) -> int:
+    def add_task(params: BaseModel, stop_at: StopAt) -> str:
         task = Task(stop_at=stop_at.value, params=params.model_dump())
         with SessionLocal() as session:
             session.add(task)
             session.commit()
-            return task.id
+            return str(task.id)
 
     @staticmethod
-    def update_task(id: int, status: TaskStatus, result: dict = None, failed_reason: str = "") -> int:
+    def update_task(id: str, status: TaskStatus, result: dict = None, failed_reason: str = "") -> int:
         with SessionLocal() as session:
             task = session.query(Task).filter(Task.id == id).first()
             if task:
@@ -48,7 +48,7 @@ class TaskCrud:
             return task.id
 
     @staticmethod
-    def delete_task(task_id: int):
+    def delete_task(task_id: str):
         with SessionLocal() as session:
             task = session.query(Task).filter(Task.id == task_id).first()
             if task:
