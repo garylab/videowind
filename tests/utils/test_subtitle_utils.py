@@ -1,6 +1,6 @@
 from moviepy import VideoFileClip
 
-from src.constants.config import config
+from src.constants.config import DirConfig
 from src.utils.subtitle_utils import VideoDimension, add_subtitle, SubtitleStyle
 from tests import VIDEOS_DIR, SUBTITLES_DIR, FONTS_DIR
 
@@ -24,7 +24,7 @@ def test_add_subtitle():
     )
     clip = add_subtitle(video_clip, video_dimension, subtitle_path, sub_style)
 
-    expected_output_file = config.DIR.storage_dir.joinpath(f"temp/test2-{test_filename}")
+    expected_output_file = DirConfig.storage_dir.joinpath(f"temp/test2-{test_filename}")
     clip.write_videofile(
         expected_output_file.as_posix(),
         audio_codec="aac",

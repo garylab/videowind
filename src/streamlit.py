@@ -18,7 +18,7 @@ if root_dir not in sys.path:
     print("")
 
 from src.config import config
-from src.constants.config import config as config_constants
+from src.constants.config import WpConfig
 from src.models.const import FILE_TYPE_IMAGES, FILE_TYPE_VIDEOS
 from src.models.schema import (MaterialInfo, VideoAspect, VideoConcatMode,
                                VideoParams, VideoTransitionMode)
@@ -454,9 +454,9 @@ else:
 # WordPress settings in sidebar when WordPress is selected
 if st.session_state['page'] == 'wordpress':
     with st.sidebar.expander(tr("WordPress Settings"), expanded=False):
-        saved_wp_url = config_constants.WP.url
-        saved_wp_username = config_constants.WP.username
-        saved_wp_password = config_constants.WP.password
+        saved_wp_url = WpConfig.url
+        saved_wp_username = WpConfig.username
+        saved_wp_password = WpConfig.password
         
         wp_url = st.text_input(tr("WordPress URL"), value=saved_wp_url, placeholder="https://example.com")
         wp_username = st.text_input(tr("Username (optional)"), value=saved_wp_username)
@@ -464,11 +464,11 @@ if st.session_state['page'] == 'wordpress':
         
         # Update config when values change
         if wp_url != saved_wp_url:
-            config_constants.WP.url = wp_url
+            WpConfig.url = wp_url
         if wp_username != saved_wp_username:
-            config_constants.WP.username = wp_username
+            WpConfig.username = wp_username
         if wp_password != saved_wp_password:
-            config_constants.WP.password = wp_password
+            WpConfig.password = wp_password
             
         if st.button(tr("Test Connection")):
             try:
@@ -908,9 +908,9 @@ elif st.session_state['page'] == 'wordpress':
     st.title(tr("WordPress Posts"))
     
     # Get WordPress settings
-    wp_url = config_constants.WP.url
-    wp_username = config_constants.WP.username
-    wp_password = config_constants.WP.password
+    wp_url = WpConfig.url
+    wp_username = WpConfig.username
+    wp_password = WpConfig.password
     
     if not wp_url:
         st.warning(tr("Please configure WordPress URL in the sidebar settings"))

@@ -12,7 +12,7 @@ from src.controllers.exception_handlers import exception_handler, validation_exc
 from src.controllers.v1 import video_router, llm_router
 from src.models.exception import HttpException
 from src.utils import utils
-from src.constants.config import config
+from src.constants.config import AppConfig
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,10 +21,10 @@ async def lifespan(app: FastAPI):
     logger.info("end lifespan")
 
 app = FastAPI(
-    title=config.APP.name,
-    description=config.APP.description,
-    version=config.APP.version,
-    debug=config.APP.debug_mode,
+    title=AppConfig.name,
+    description=AppConfig.description,
+    version=AppConfig.version,
+    debug=AppConfig.debug_mode,
     lifespan=lifespan
 )
 app.include_router(video_router.router)
@@ -54,11 +54,11 @@ app.mount("/", StaticFiles(directory=public_dir, html=True), name="")
 
 
 if __name__ == "__main__":
-    logger.info(f"start server, docs: http://{config.APP.host}:{config.APP.port}/docs")
+    logger.info(f"start server, docs: http://{AppConfig.host}:{AppConfig.port}/docs")
     uvicorn.run(
         app="src.api:app",
-        host=config.APP.host,
-        port=config.APP.port,
-        reload=config.APP.reload,
+        host=AppConfig.host,
+        port=AppConfig.port,
+        reload=AppConfig.reload,
         log_level="warning",
     )

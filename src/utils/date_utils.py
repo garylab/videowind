@@ -1,10 +1,10 @@
 from datetime import datetime
 import pytz
 
-from src.constants.config import config
+from src.constants.config import AppConfig
 
 
-tz = pytz.timezone(config.APP.tz)
+tz = pytz.timezone(AppConfig.tz)
 
 
 def get_now():

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
-from src.constants.config import config
+from src.constants.config import WpConfig
 
 
 class WordPress:
@@ -16,14 +16,14 @@ class WordPress:
             password: WordPress password for authenticated requests (optional)
         """
         # Use provided parameters or fall back to config
-        self.base_url = base_url or config.WP.url
+        self.base_url = base_url or WpConfig.url
         if not self.base_url:
             raise ValueError("WordPress URL is required")
             
         self.base_url = self.base_url.rstrip('/')
         self.api_url = f"{self.base_url}/wp-json/wp/v2"
-        self.username = username or config.WP.username
-        self.password = password or config.WP.password
+        self.username = username or WpConfig.username
+        self.password = password or WpConfig.password
         self.auth = (self.username, self.password) if self.username and self.password else None
 
     def get_posts(self, page: int = 1, per_page: int = 10, search: str = '') -> Dict[str, Any]:

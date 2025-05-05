@@ -13,7 +13,7 @@ from src.db.connection import SessionLocal
 from src.db.models import Task, Clip, Term, ClipTerm
 
 
-class Dao:
+class TaskCrud:
     @staticmethod
     def get_task(task_id: int):
         with SessionLocal() as session:

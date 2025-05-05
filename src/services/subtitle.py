@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 from faster_whisper import WhisperModel
 from loguru import logger
 
-from src.constants.config import config
+from src.constants.config import AiConfig
 from src.utils import utils
 
 model = None
@@ -15,17 +15,17 @@ def create(audio_file, subtitle_file: str = ""):
     global model
     if not model:
         logger.info(
-            f"loading whisper model: {config.AI.whisper_model}, "
-            f"device: {config.AI.whisper_device}, "
-            f"compute_type: {config.AI.whisper_compute_type}"
+            f"loading whisper model: {AiConfig.whisper_model}, "
+            f"device: {AiConfig.whisper_device}, "
+            f"compute_type: {AiConfig.whisper_compute_type}"
         )
         try:
             model = WhisperModel(
-                model_size_or_path=config.AI.whisper_model,
-                device=config.AI.whisper_device,
-                compute_type=config.AI.whisper_compute_type,
-                download_root=config.AI.whisper_download_dir,
-                local_files_only=config.AI.whisper_download_dir.exists(),
+                model_size_or_path=AiConfig.whisper_model,
+                device=AiConfig.whisper_device,
+                compute_type=AiConfig.whisper_compute_type,
+                download_root=AiConfig.whisper_download_dir,
+                local_files_only=AiConfig.whisper_download_dir.exists(),
             )
         except Exception as e:
             logger.error(
@@ -276,9 +276,9 @@ def correct(subtitle_file, video_script):
 
 
 if __name__ == "__main__":
-    local_files_only = config.AI.whisper_download_dir.exists()
+    local_files_only = AiConfig.whisper_download_dir.exists()
     model = WhisperModel(
-        model_size_or_path=config.AI.whisper_model, device=config.AI.whisper_device, compute_type=config.AI.whisper_compute_type, download_root=config.AI.whisper_download_dir, num_workers=5, local_files_only=local_files_only
+        model_size_or_path=AiConfig.whisper_model, device=AiConfig.whisper_device, compute_type=AiConfig.whisper_compute_type, download_root=AiConfig.whisper_download_dir, num_workers=5, local_files_only=local_files_only
     )
     segments, info = model.transcribe("/Users/gary/works/VideoWind/tests/files/audios/harvard.wav",
                                       beam_size=5,
