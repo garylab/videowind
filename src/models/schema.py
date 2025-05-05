@@ -111,7 +111,7 @@ class VideoParams(BaseModel):
     custom_position: float = 70.0
     font_name: Optional[str] = "STHeitiMedium.ttc"
     text_fore_color: Optional[str] = "#FFFFFF"
-    text_background_color: Union[bool, str] = True
+    text_background_color: Optional[str] = "#333333"
 
     font_size: int = 60
     stroke_color: Optional[str] = "#000000"
@@ -132,7 +132,7 @@ class SubtitleRequest(BaseModel):
     subtitle_position: Optional[str] = "bottom"
     font_name: Optional[str] = "STHeitiMedium.ttc"
     text_fore_color: Optional[str] = "#FFFFFF"
-    text_background_color: Union[bool, str] = True
+    text_background_color: Optional[str] = "#333333"
     font_size: int = 60
     stroke_color: Optional[str] = "#000000"
     stroke_width: float = 1.5
