@@ -9,6 +9,7 @@ from openai import AzureOpenAI, OpenAI
 from openai.types.chat import ChatCompletion
 
 from src.config import config
+from src.constants.config import LlmConfig
 
 _max_retries = 5
 
@@ -259,6 +260,20 @@ def _generate_response(prompt: str) -> str:
         return f"Error: {str(e)}"
 
 
+def _get_llm_response(prompt: str) -> str:
+    client = AzureOpenAI(
+        api_key=LlmConfig.api_key,
+        api_version=LlmConfig.api_version,
+        azure_endpoint=LlmConfig.base_url,
+    )
+    response = client.chat.completions.create(
+        model=LlmConfig.model_name,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return response.choices[0].message.content
+
+
 def generate_script(
     video_subject: str, language: str = "", paragraph_number: int = 1
 ) -> str:
@@ -309,7 +324,7 @@ Generate a script for a video, depending on the subject of the video.
 
     for i in range(_max_retries):
         try:
-            response = _generate_response(prompt=prompt)
+            response = _get_llm_response(prompt=prompt)
             if response:
                 final_script = format_response(response)
             else:
@@ -366,7 +381,7 @@ Please note that you must use English for generating video search terms; Chinese
     response = ""
     for i in range(_max_retries):
         try:
-            response = _generate_response(prompt)
+            response = _get_llm_response(prompt)
             if "Error: " in response:
                 logger.error(f"failed to generate video script: {response}")
                 return response

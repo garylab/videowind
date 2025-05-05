@@ -50,3 +50,10 @@ class WpConfig:
     password: str = get_str("WP_PASSWORD", "")
 
 
+@dataclass
+class LlmConfig:
+    provider = "openai"
+    base_url: str = get_str("LLM_BASE_URL", "")
+    api_key: str = get_str("LLM_API_KEY", "")
+    model_name: str = get_str("LLM_MODEL_NAME", "gpt-4o")
+    api_version: str = get_str("LLM_API_VERSION", "2014-01-01")
