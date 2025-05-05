@@ -12,7 +12,7 @@ from fastapi_pagination import Params
 from src.config import config
 from src.constants.enums import StopAt
 from src.controllers.v1.base import new_router
-from src.db.dao import Dao
+from src.crud.task_crud import TaskCrud
 from src.db.models import Task
 from src.models.exception import HttpException
 from src.models.schema import (
@@ -48,7 +48,7 @@ def create_audio(body: AudioRequest):
 
 
 def create_task(body: Union[TaskVideoRequest, SubtitleRequest, AudioRequest], stop_at: StopAt):
-    task_id = Dao.add_task(stop_at=stop_at, params=body)
+    task_id = TaskCrud.add_task(stop_at=stop_at, params=body)
     task = {
         "task_id": task_id,
         "params": body.model_dump(),
@@ -59,7 +59,7 @@ def create_task(body: Union[TaskVideoRequest, SubtitleRequest, AudioRequest], st
 
 @router.get("/tasks", response_model=TaskQueryResponse, summary="Get all tasks")
 def get_all_tasks(params: Params):
-    page = Dao.get_all_tasks(params)
+    page = TaskCrud.get_all_tasks(params)
     return utils.get_response(200, page)
 
 
@@ -75,7 +75,7 @@ def get_task(
         endpoint = str(request.base_url)
     endpoint = endpoint.rstrip("/")
 
-    task: Task = Dao.get_task(task_id)
+    task: Task = TaskCrud.get_task(task_id)
     if task:
         task_dir = utils.task_dir()
 
@@ -112,14 +112,14 @@ def get_task(
     summary="Delete a generated short video task",
 )
 def delete_video(task_id: int = Path(..., description="Task ID")):
-    task = Dao.get_task(task_id)
+    task = TaskCrud.get_task(task_id)
     if task:
         tasks_dir = utils.task_dir()
         current_task_dir = os.path.join(tasks_dir, task_id)
         if os.path.exists(current_task_dir):
             shutil.rmtree(current_task_dir)
 
-        Dao.delete_task(task_id)
+        TaskCrud.delete_task(task_id)
         logger.success(f"video deleted: {utils.to_json(task)}")
         return utils.get_response(200)
 

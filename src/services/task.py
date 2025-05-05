@@ -7,7 +7,7 @@ from loguru import logger
 
 from src.config import config
 from src.constants.enums import TaskStatus, StopAt
-from src.db.dao import Dao
+from src.crud.task_crud import TaskCrud
 from src.models import const
 from src.models.schema import VideoConcatMode, VideoParams
 from src.services import llm, material, subtitle, video, voice
@@ -27,7 +27,7 @@ def generate_script(task_id, params):
         logger.debug(f"video script: \n{video_script}")
 
     if not video_script:
-        Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate video script.")
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate video script.")
         logger.error("failed to generate video script.")
         return None
 
@@ -52,7 +52,7 @@ def generate_terms(task_id, params, video_script):
         logger.debug(f"video terms: {utils.to_json(video_terms)}")
 
     if not video_terms:
-        Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate video terms.")
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate video terms.")
         logger.error("failed to generate video terms.")
         return None
 
@@ -81,7 +81,7 @@ def generate_audio(task_id, params, video_script):
         voice_file=audio_file,
     )
     if sub_maker is None:
-        Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate audio.")
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate audio.")
         logger.error(
             """failed to generate audio:
 1. check if the language of the voice matches the language of the video script.
@@ -131,7 +131,7 @@ def get_video_materials(task_id, params, video_terms, audio_duration):
             materials=params.video_materials, clip_duration=params.video_clip_duration
         )
         if not materials:
-            Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="no valid materials found.")
+            TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="no valid materials found.")
             logger.error(
                 "no valid materials found, please check the materials and try again."
             )
@@ -149,7 +149,7 @@ def get_video_materials(task_id, params, video_terms, audio_duration):
             max_clip_duration=params.video_clip_duration,
         )
         if not downloaded_videos:
-            Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to download videos.")
+            TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to download videos.")
             logger.error(
                 "failed to download videos, maybe the network is not available. if you are in China, please use a VPN."
             )
@@ -202,7 +202,7 @@ def generate_final_videos(
 
 
 def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
-    task_id = Dao.add_task(params, stop_at)
+    task_id = TaskCrud.add_task(params, stop_at)
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
 
     if type(params.video_concat_mode) is str:
@@ -211,10 +211,10 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
     # 1. Generate script
     video_script = generate_script(task_id, params)
     if not video_script or "Error: " in video_script:
-        Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate video script error.")
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate video script error.")
         return
 
-    Dao.update_task(task_id, TaskStatus.SCRIPT_GENERATED, {"script": video_script})
+    TaskCrud.update_task(task_id, TaskStatus.SCRIPT_GENERATED, {"script": video_script})
     if stop_at == "script":
         return {"id": task_id, "script": video_script}
 
@@ -223,11 +223,11 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
     if params.video_source != "local":
         video_terms = generate_terms(task_id, params, video_script)
         if not video_terms:
-            Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate video terms error.")
+            TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate video terms error.")
             return
 
     save_script_data(task_id, video_script, video_terms, params)
-    Dao.update_task(task_id, TaskStatus.TERMS_GENERATED, {"script": video_script, "terms": video_terms})
+    TaskCrud.update_task(task_id, TaskStatus.TERMS_GENERATED, {"script": video_script, "terms": video_terms})
 
     if stop_at == "terms":
         return {"id": task_id, "script": video_script, "terms": video_terms}
@@ -238,10 +238,10 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
     )
 
     if not audio_file:
-        Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate audio error.")
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate audio error.")
         return
 
-    Dao.update_task(task_id, TaskStatus.AUDIO_GENERATED, {
+    TaskCrud.update_task(task_id, TaskStatus.AUDIO_GENERATED, {
         "id": task_id,
         "script": video_script,
         "terms": video_terms,
@@ -256,7 +256,7 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
     subtitle_path = generate_subtitle(
         task_id, params, video_script, sub_maker, audio_file
     )
-    Dao.update_task(task_id, TaskStatus.SUBTITLE_GENERATED, {
+    TaskCrud.update_task(task_id, TaskStatus.SUBTITLE_GENERATED, {
         "id": task_id,
         "script": video_script,
         "terms": video_terms,
@@ -273,10 +273,10 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
         task_id, params, video_terms, audio_duration
     )
     if not downloaded_videos:
-        Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="Get video materials error.")
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Get video materials error.")
         return
 
-    Dao.update_task(task_id, TaskStatus.CLIPS_DOWNLOADED, {
+    TaskCrud.update_task(task_id, TaskStatus.CLIPS_DOWNLOADED, {
         "id": task_id,
         "script": video_script,
         "terms": video_terms,
@@ -294,7 +294,7 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
     )
 
     if not final_video_paths:
-        Dao.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate final videos error.")
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate final videos error.")
         return
 
     logger.success(
@@ -312,7 +312,7 @@ def start(params: VideoParams, stop_at: StopAt = StopAt.VIDEO):
         "subtitle_path": subtitle_path,
         "materials": downloaded_videos,
     }
-    Dao.update_task(task_id, TaskStatus.FINAL_VIDEO_GENERATED, result)
+    TaskCrud.update_task(task_id, TaskStatus.FINAL_VIDEO_GENERATED, result)
     return result
 
 
