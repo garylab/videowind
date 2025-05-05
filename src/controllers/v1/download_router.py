@@ -22,7 +22,6 @@ from src.models.schema import (
     TaskDeletionResponse,
     TaskQueryResponse,
     TaskResponse,
-    TaskVideoRequest,
 )
 from src.utils import utils
 

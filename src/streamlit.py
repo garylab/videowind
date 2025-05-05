@@ -21,7 +21,7 @@ from src.config import config
 from src.constants.config import WpConfig
 from src.models.const import FILE_TYPE_IMAGES, FILE_TYPE_VIDEOS
 from src.models.schema import (MaterialInfo, VideoAspect, VideoConcatMode,
-                               VideoParams, VideoTransitionMode)
+                               VideoRequest, VideoTransitionMode)
 from src.services import llm
 from src.services import task as tm
 from src.services import voice
@@ -492,7 +492,7 @@ if st.session_state['page'] == 'home':
     middle_panel = panel[1]
     right_panel = panel[2]
     
-    params = VideoParams(video_subject="")
+    params = VideoRequest(video_subject="")
     uploaded_files = []
 
     with left_panel:

@@ -1,18 +1,16 @@
 import os
 import shutil
-from typing import Union
 from fastapi import Depends, Path, Request, BackgroundTasks
 from loguru import logger
 from fastapi_pagination import Params, Page
 from fastapi import APIRouter
 
-from src.config import config
 from src.constants.enums import StopAt
 from src.crud.task_crud import TaskCrud
 from src.db.models import Task
 from src.models.exception import HttpException
-from src.models.schema import TaskDeletionResponse, TaskQueryResponse, TaskIdOut, TaskVideoRequest, SubtitleRequest, \
-    AudioRequest, TaskStatusOut, TaskOut, TaskLiteOut
+from src.models.schema import TaskDeletionResponse, TaskIdOut, SubtitleRequest, \
+    AudioRequest, TaskStatusOut, TaskOut, TaskLiteOut, VideoRequest
 from src.services.task import start
 from src.utils import utils
 
@@ -34,7 +32,7 @@ def create_subtitle(body: SubtitleRequest, background_tasks: BackgroundTasks):
 
 
 @router.post("/videos", response_model=TaskIdOut, summary="Generate audio, subtitle and video task")
-def create_video(body: TaskVideoRequest, background_tasks: BackgroundTasks):
+def create_video(body: VideoRequest, background_tasks: BackgroundTasks):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.VIDEO)
     background_tasks.add_task(start, task_id, body, StopAt.VIDEO)
     return TaskIdOut(task_id=task_id)

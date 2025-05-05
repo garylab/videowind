@@ -20,7 +20,7 @@ from src.models.schema import (
     MaterialInfo,
     VideoAspect,
     VideoConcatMode,
-    VideoParams,
+    VideoRequest,
     VideoTransitionMode,
 )
 from src.services.utils import video_effects
@@ -185,7 +185,7 @@ def generate_video(
     audio_path: str,
     subtitle_path: str,
     output_file: str,
-    params: VideoParams,
+    params: VideoRequest,
 ):
     aspect = VideoAspect(params.video_aspect)
     video_width, video_height = aspect.to_resolution()
