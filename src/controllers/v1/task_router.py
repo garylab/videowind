@@ -12,7 +12,7 @@ from src.crud.task_crud import TaskCrud
 from src.db.models import Task
 from src.models.exception import HttpException
 from src.models.schema import TaskDeletionResponse, TaskQueryResponse, TaskIdOut, TaskVideoRequest, SubtitleRequest, \
-    AudioRequest
+    AudioRequest, TaskStatusOut, TaskOut
 from src.services.task import start
 from src.utils import utils
 
@@ -46,47 +46,30 @@ def get_all_tasks(params: Params):
     return utils.get_response(200, page)
 
 
-@router.get(
-    "/{task_id}/status", response_model=TaskQueryResponse, summary="Query task status"
-)
+@router.get("/{task_id}", response_model=TaskOut, summary="Query task")
 def get_task(
-    request: Request,
     task_id: str = Path(..., description="Task ID"),
 ):
-    endpoint = config.app.get("endpoint", "")
-    if not endpoint:
-        endpoint = str(request.base_url)
-    endpoint = endpoint.rstrip("/")
-
     task: Task = TaskCrud.get_task(task_id)
-    if task:
-        task_dir = utils.task_dir()
+    if not task:
+        raise HttpException(
+            task_id=task_id, status_code=404, message=f"{task_id}: task not found"
+        )
 
-        def file_to_uri(file):
-            if not file.startswith(endpoint):
-                _uri_path = v.replace(task_dir, "tasks").replace("\\", "/")
-                _uri_path = f"{endpoint}/{_uri_path}"
-            else:
-                _uri_path = file
-            return _uri_path
+    return TaskOut.model_validate(task)
 
-        if "videos" in task:
-            videos = task["videos"]
-            urls = []
-            for v in videos:
-                urls.append(file_to_uri(v))
-            task["videos"] = urls
-        if "combined_videos" in task:
-            combined_videos = task["combined_videos"]
-            urls = []
-            for v in combined_videos:
-                urls.append(file_to_uri(v))
-            task["combined_videos"] = urls
-        return utils.get_response(200, task)
+@router.get("/{task_id}/status", response_model=TaskStatusOut, summary="Query task status")
+def get_task_status(
+        request: Request,
+        task_id: str = Path(..., description="Task ID"),
+):
+    task: Task = TaskCrud.get_task(task_id)
+    if not task:
+        raise HttpException(
+            task_id=task_id, status_code=404, message=f"{task_id}: task not found"
+        )
 
-    raise HttpException(
-        task_id=task_id, status_code=404, message=f"{task_id}: task not found"
-    )
+    return TaskStatusOut(task_id=task_id, status=task.status)
 
 
 @router.delete(

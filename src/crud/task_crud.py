@@ -15,7 +15,7 @@ from src.db.models import Task, Clip, Term, ClipTerm
 
 class TaskCrud:
     @staticmethod
-    def get_task(task_id: int):
+    def get_task(task_id: str):
         with SessionLocal() as session:
             return session.query(Task).filter(Task.id == task_id).first()
 

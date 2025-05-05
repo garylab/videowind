@@ -204,8 +204,33 @@ class VideoTermsRequest(VideoTermsParams, BaseModel):
     pass
 
 
+class TaskOut(BaseModel):
+    id: str
+    status: str
+    params: dict
+    result: Optional[dict] = None
+    failed_reason: Optional[str] = None
+
+    # convert uuid to string for id
+    @pydantic.field_validator("id", mode="before")
+    def convert_uuid_to_str(cls, value):
+        if isinstance(value, str):
+            return value
+        return str(value)
+
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+        populate_by_name = True
+        use_enum_values = True
+
 class TaskIdOut(BaseModel):
     task_id: str
+
+
+class TaskStatusOut(BaseModel):
+    task_id: str
+    status: str
 
 
 ######################################################################################################
