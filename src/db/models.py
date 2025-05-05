@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, DateTime, JSON, UniqueConstraint
-
+from sqlalchemy.dialects.postgresql import UUID
+from uuid6 import uuid7
 from src.constants.enums import TaskStatus
 from src.db.connection import Base, create_tables
 from src.utils.date_utils import get_now
@@ -8,7 +9,7 @@ from src.utils.date_utils import get_now
 class BaseModel(Base):
     __abstract__ = True
 
-    id = Column(Integer, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7, unique=True, nullable=False)
     created_at = Column(DateTime, default=get_now)
     updated_at = Column(DateTime, default=get_now, onupdate=get_now)
 
@@ -49,8 +50,8 @@ class Term(BaseModel):
 class ClipTerm(BaseModel):
     __tablename__ = "clips_terms"
 
-    clip_id = Column(Integer, ForeignKey("clips.id"),  nullable=False)
-    term_id = Column(Integer, ForeignKey("terms.id"), nullable=False)
+    clip_id = Column(UUID(as_uuid=True), ForeignKey("clips.id"),  nullable=False)
+    term_id = Column(UUID(as_uuid=True), ForeignKey("terms.id"), nullable=False)
 
     __table_args__ = (UniqueConstraint("clip_id", "term_id"),)
 
@@ -66,8 +67,8 @@ class WordpressWebsite(BaseModel):
 class WordpressPost(BaseModel):
     __tablename__ = "wordpress_posts"
 
-    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
-    post_id = Column(Integer, nullable=False, unique=True)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    post_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
 
     status = Column(Integer, default=TaskStatus.INIT.value)
 

@@ -1,8 +1,7 @@
 import os
 import shutil
 from typing import Union
-
-from fastapi import Depends, Path, Request
+from fastapi import Depends, Path, Request, BackgroundTasks
 from loguru import logger
 from fastapi_pagination import Params
 from fastapi import APIRouter
@@ -14,6 +13,7 @@ from src.db.models import Task
 from src.models.exception import HttpException
 from src.models.schema import TaskDeletionResponse, TaskQueryResponse, TaskResponse, TaskVideoRequest, SubtitleRequest, \
     AudioRequest
+from src.services.task import start
 from src.utils import utils
 
 router = APIRouter(tags=["Task"], prefix="/tasks")
@@ -29,20 +29,20 @@ def create_task(body: Union[TaskVideoRequest, SubtitleRequest, AudioRequest], st
     return utils.get_response(200, task)
 
 
-@router.post("/videos", response_model=TaskResponse, summary="Generate a short video")
-def create_video(body: TaskVideoRequest):
-    return create_task(body, stop_at=StopAt.VIDEO)
+@router.post("/audio", response_model=TaskResponse, summary="Generate audio task")
+def create_audio(body: AudioRequest, background_tasks: BackgroundTasks):
+    background_tasks.add_task(start, body, StopAt.AUDIO)
+    return create_task(body, StopAt.AUDIO)
 
 
-@router.post("/subtitle", response_model=TaskResponse, summary="Generate subtitle only")
+@router.post("/subtitle", response_model=TaskResponse, summary="Generate audio and subtitle task")
 def create_subtitle(body: SubtitleRequest):
     return create_task(body, stop_at=StopAt.SUBTITLE)
 
 
-@router.post("/audio", response_model=TaskResponse, summary="Generate audio only")
-def create_audio(body: AudioRequest):
-    return create_task(body, StopAt.AUDIO)
-
+@router.post("/videos", response_model=TaskResponse, summary="Generate audio, subtitle and video task")
+def create_video(body: TaskVideoRequest):
+    return create_task(body, stop_at=StopAt.VIDEO)
 
 
 @router.get("", response_model=TaskQueryResponse, summary="Get all tasks")
