@@ -5,10 +5,10 @@ from fastapi import Depends
 from src.models.schema import VoiceParams, VoiceOut
 from src.services.voice import get_azure_voices, get_azure_voice_locales
 
-router = APIRouter(tags=["Text to speech"], prefix="/tts")
+router = APIRouter(tags=["Voices"], prefix="/voices")
 
 
-@router.get("/voices", response_model=List[VoiceOut])
+@router.get("", response_model=List[VoiceOut])
 def get_all_voices(params: VoiceParams = Depends()):
     voices = get_azure_voices()
     filters = []
@@ -29,6 +29,6 @@ def get_all_voices(params: VoiceParams = Depends()):
     return filters
 
 
-@router.get("/voices/locales", response_model=List[str])
+@router.get("/locales", response_model=List[str])
 def get_all_locales():
     return get_azure_voice_locales()

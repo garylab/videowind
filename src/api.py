@@ -10,7 +10,7 @@ import uvicorn
 
 from src.controllers import ping_router
 from src.controllers.exception_handlers import exception_handler, validation_exception_handler
-from src.controllers.v1 import llm_router, task_router, music_router, download_router, tts_router
+from src.controllers.v1 import llm_router, task_router, music_router, download_router, voice_router
 from src.models.exception import HttpException
 from src.utils import utils
 from src.constants.config import AppConfig
@@ -31,7 +31,7 @@ app = FastAPI(
 app.include_router(ping_router.router)
 app.include_router(task_router.router)
 app.include_router(llm_router.router)
-app.include_router(tts_router.router)
+app.include_router(voice_router.router)
 app.include_router(music_router.router)
 app.include_router(download_router.router)
 
