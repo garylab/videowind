@@ -70,21 +70,11 @@ def azure_tts_v2(text: str, voice_name: str, voice_file: str) -> Union[SubMaker,
         logger.info(f"start, voice name: {voice_name}")
 
         # Creates an instance of a speech config with specified subscription key and service region.
-        speech_key = config.azure.get("speech_key", "")
-        service_region = config.azure.get("speech_region", "")
-        audio_config = speechsdk.audio.AudioOutputConfig(
-            filename=voice_file, use_default_speaker=True
-        )
-        speech_config = speechsdk.SpeechConfig(
-            subscription=speech_key, region=service_region
-        )
+        audio_config = speechsdk.audio.AudioOutputConfig(filename=voice_file, use_default_speaker=True)
+        speech_config = speechsdk.SpeechConfig(subscription=AiConfig.azure_speech_key, region=AiConfig.azure_speech_region)
         speech_config.speech_synthesis_voice_name = voice_name
-        # speech_config.set_property(property_id=speechsdk.PropertyId.SpeechServiceResponse_RequestSentenceBoundary,
-        #                            value='true')
-        speech_config.set_property(
-            property_id=speechsdk.PropertyId.SpeechServiceResponse_RequestWordBoundary,
-            value="true",
-        )
+
+        speech_config.set_property(property_id=speechsdk.PropertyId.SpeechServiceResponse_RequestWordBoundary,value="true")
 
         speech_config.set_speech_synthesis_output_format(
             speechsdk.SpeechSynthesisOutputFormat.Audio48Khz192KBitRateMonoMp3
