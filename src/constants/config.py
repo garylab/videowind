@@ -41,6 +41,8 @@ class AiConfig:
     whisper_device = get_str("AI_WHISPER_DEVICE", "cpu")
     whisper_compute_type = get_str("AI_WHISPER_COMPUTE_TYPE", "int8")
     whisper_download_dir = get_str("AI_WHISPER_DOWNLOAD_DIR", DirConfig.storage_dir.joinpath(f"models/whisper-large-v3"))
+    azure_speech_region = get_str("AZURE_SPEECH_REGION")
+    azure_speech_key = get_str("AZURE_SPEECH_KEY")
 
 
 @dataclass

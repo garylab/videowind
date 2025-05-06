@@ -1,9 +1,12 @@
 import warnings
+from pydantic import Field
 from enum import Enum
 from typing import Any, List, Optional, Union
 
 import pydantic
 from pydantic import BaseModel
+
+from src.constants.enums import GenderType
 
 # 忽略 Pydantic 的特定警告
 warnings.filterwarnings(
@@ -106,6 +109,20 @@ class VideoRequest(SubtitleRequest):
     custom_position: float = 70.0
     n_threads: Optional[int] = 2
     paragraph_number: Optional[int] = 1
+
+
+class VoiceParams(BaseModel):
+    q: Optional[str] = None
+    locale: Optional[str] = None
+    gender: Optional[GenderType] = None
+
+
+class VoiceOut(BaseModel):
+    ShortName: str
+    SampleRateHertz: str
+    Gender: str
+    Locale: str
+    SecondaryLocaleList: List[str] = Field(default_factory=list)
 
 
 class VideoScriptParams:

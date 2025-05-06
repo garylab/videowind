@@ -2,17 +2,40 @@ import asyncio
 import os
 import re
 from datetime import datetime
-from typing import Union
+from typing import Union, List
 from xml.sax.saxutils import unescape
-
+import requests
 import edge_tts
+from functools import lru_cache
 from edge_tts import SubMaker, submaker
 from edge_tts.submaker import mktimestamp
 from loguru import logger
 from moviepy.video.tools import subtitles
 
 from src.config import config
+from src.constants.config import AiConfig
+from src.models.schema import VoiceOut
 from src.utils import utils
+
+
+@lru_cache(maxsize=5)
+def get_azure_voices() -> List[VoiceOut]:
+    tts_base_url = f"https://{AiConfig.azure_speech_region}.tts.speech.microsoft.com/cognitiveservices"
+    tts_headers = {"Ocp-Apim-Subscription-Key": AiConfig.azure_speech_key}
+    response = requests.get(f'{tts_base_url}/voices/list', headers=tts_headers)
+    return [VoiceOut(**d) for d in response.json()]
+
+
+@lru_cache(maxsize=5)
+def get_azure_voice_locales() -> List[str]:
+    voices = get_azure_voices()
+    locales = set()
+    for v in voices:
+        locales.add(v.Locale)
+        if v.SecondaryLocaleList:
+            locales.update(v.SecondaryLocaleList)
+
+    return sorted(list(locales))
 
 
 def get_all_azure_voices(filter_locals=None) -> list[str]:

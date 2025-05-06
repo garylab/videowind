@@ -27,3 +27,8 @@ class PostStatus(StrEnum):
     FAILED = "FAILED"
     INIT = "INIT"
     PUBLISHED = "PUBLISHED"
+
+
+class GenderType(StrEnum):
+    MALE = "Male"
+    FEMALE = "Female"
