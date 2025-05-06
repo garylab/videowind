@@ -10,7 +10,7 @@ from src.constants.enums import TaskStatus, StopAt
 from src.crud.task_crud import TaskCrud
 from src.models.schema import VideoConcatMode, VideoRequest, AudioRequest, SubtitleRequest
 from src.services import llm, material, subtitle, video
-from src.services.voice_service import azure_tts_v2, get_audio_duration, create_subtitle
+from src.services.voice_service import azure_tts_v2, get_audio_duration, create_subtitle, azure_tts_generate_with_srt
 from src.utils import utils
 
 
@@ -74,23 +74,27 @@ def save_script_data(task_id, video_script, video_terms, params):
 def generate_audio(task_id, params, video_script):
     logger.info("\n\n## generating audio")
     audio_file = path.join(utils.task_dir(task_id), "audio.mp3")
-    sub_maker = azure_tts_v2(
+    srt_file = path.join(utils.task_dir(task_id), "subtitle.srt")
+    audio_duration = azure_tts_generate_with_srt(
         text=video_script,
         voice_name=params.voice_name,
-        voice_file=audio_file,
+        audio_file=audio_file,
+        srt_file=srt_file,
     )
-    if sub_maker is None:
-        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate audio.")
-        logger.error(
-            """failed to generate audio:
-1. check if the language of the voice matches the language of the video script.
-2. check if the network is available. If you are in China, it is recommended to use a VPN and enable the global traffic mode.
-        """.strip()
-        )
+    if not audio_duration:
         return None, None, None
 
-    audio_duration = math.ceil(get_audio_duration(sub_maker))
-    return audio_file, audio_duration, sub_maker
+#     if sub_maker is None:
+#         TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate audio.")
+#         logger.error(
+#             """failed to generate audio:
+# 1. check if the language of the voice matches the language of the video script.
+# 2. check if the network is available. If you are in China, it is recommended to use a VPN and enable the global traffic mode.
+#         """.strip()
+#         )
+#         return None, None, None
+
+    return audio_file, audio_duration, srt_file
 
 
 def generate_subtitle(task_id, params, video_script, sub_maker, audio_file):
@@ -215,7 +219,7 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
         return {"id": task_id, "script": video_script}
 
     # 2. Generate audio
-    audio_file, audio_duration, sub_maker = generate_audio(
+    audio_file, audio_duration, subtitle_path = generate_audio(
         task_id, params, video_script
     )
 
@@ -227,13 +231,15 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
         "id": task_id,
         "script": video_script,
         "audio_file": audio_file,
-        "audio_duration": audio_duration
+        "audio_duration": audio_duration,
+        "subtitle_path": subtitle_path
     })
 
     if stop_at == StopAt.AUDIO:
         return {"id": task_id, "audio_file": audio_file, "audio_duration": audio_duration}
 
     # 3. Generate subtitle
+    """
     subtitle_path = generate_subtitle(
         task_id, params, video_script, sub_maker, audio_file
     )
@@ -247,7 +253,7 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
 
     if stop_at == StopAt.SUBTITLE:
         return {"id": task_id, "subtitle_path": subtitle_path}
-
+    """
     if type(params.video_concat_mode) is str:
         params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
 

@@ -72,9 +72,9 @@ class VideoClip:
 
 
 class AudioRequest(BaseModel):
-    video_script: str
+    video_script: str = "Wise men speak because they have something to say, fools because they have to say something."
     video_language: Optional[str] = ""
-    voice_name: Optional[str] = "zh-CN-XiaoxiaoNeural-Female"
+    voice_name: Optional[str] = "en-US-AvaMultilingualNeural"
     voice_volume: Optional[float] = 1.0
     bgm_type: Optional[str] = "random"
     bgm_file: Optional[str] = ""
@@ -83,7 +83,7 @@ class AudioRequest(BaseModel):
 
 class SubtitleRequest(AudioRequest):
     subtitle_position: Optional[str] = "bottom"
-    font_name: Optional[str] = "STHeitiMedium.ttc"
+    font_name: Optional[str] = "JosefinSans-Light.ttf"
     text_fore_color: Optional[str] = "#FFFFFF"
     text_background_color: Optional[str] = "#333333"
     font_size: int = 60

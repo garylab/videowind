@@ -211,6 +211,9 @@ def generate_video(
 
         logger.info(f"using font: {font_path}")
 
+        if not subtitle_path or not os.path.exists(subtitle_path):
+            logger.warning("Subtitle enabled, but no subtitle file found at: %s", subtitle_path)
+
     video_clip = VideoFileClip(video_path)
     audio_clip = AudioFileClip(audio_path).with_effects(
         [afx.MultiplyVolume(params.voice_volume)]

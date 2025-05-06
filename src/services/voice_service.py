@@ -2,7 +2,7 @@ import asyncio
 import os
 import re
 from datetime import datetime
-from typing import Union, List
+from typing import Union, List, Tuple
 from xml.sax.saxutils import unescape
 import requests
 import edge_tts
@@ -103,6 +103,98 @@ def azure_tts_v2(text: str, voice_name: str, voice_file: str) -> Union[SubMaker,
     except Exception as e:
         logger.error(f"failed, error: {str(e)}")
     return None
+
+def _format_srt_timestamp(ms: int) -> str:
+    seconds, millis = divmod(ms, 1000)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours:02}:{minutes:02}:{seconds:02},{millis:03}"
+
+
+def azure_tts_generate_with_srt(text: str, voice_name: str, audio_file: str, srt_file: str) -> int:
+    word_timings: List[Tuple[str, int]] = []
+
+    def on_word_boundary(evt: speechsdk.SpeechSynthesisWordBoundaryEventArgs):
+        word_timings.append((evt.text, evt.audio_offset // 10000))  # convert 100-nanosecond to milliseconds
+
+    try:
+        print(f"Starting synthesis with voice: {voice_name}")
+
+        speech_config = speechsdk.SpeechConfig(
+            subscription=AiConfig.azure_speech_key,
+            region=AiConfig.azure_speech_region
+        )
+        speech_config.speech_synthesis_voice_name = voice_name
+        speech_config.set_property(
+            property_id=speechsdk.PropertyId.SpeechServiceResponse_RequestWordBoundary,
+            value="true"
+        )
+        speech_config.set_speech_synthesis_output_format(
+            speechsdk.SpeechSynthesisOutputFormat.Audio48Khz192KBitRateMonoMp3
+        )
+
+        audio_config = speechsdk.audio.AudioOutputConfig(filename=audio_file)
+
+        synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+        synthesizer.synthesis_word_boundary.connect(on_word_boundary)
+
+        result = synthesizer.speak_text_async(text.strip()).get()
+
+        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+            logger.success("Speech synthesis succeeded.")
+        else:
+            logger.error("Speech synthesis failed.")
+            return 0
+
+        audio_duration = int(result.audio_duration.total_seconds())
+
+        # Group words into compact subtitle chunks
+        max_words: int = 7
+        max_duration_ms: int = 2500
+
+        # Calculate word ranges: (text, start_ms, end_ms)
+        word_ranges = []
+        for i in range(len(word_timings)):
+            word = word_timings[i][0]
+            start = word_timings[i][1]
+            end = word_timings[i + 1][1] if i + 1 < len(word_timings) else start + 500
+            word_ranges.append((word, start, end))
+
+        # Group into subtitle chunks
+        subtitles = []
+        chunk = []
+        chunk_start = word_ranges[0][1]
+
+        for word, start, end in word_ranges:
+            if not chunk:
+                chunk_start = start
+            chunk.append((word, start, end))
+            chunk_duration = end - chunk_start
+
+            if (
+                    len(chunk) >= max_words
+                    or chunk_duration >= max_duration_ms
+                    or word.strip().endswith(('.', '?', '!'))
+            ):
+                text_line = ' '.join(w for w, _, _ in chunk)
+                subtitles.append((chunk[0][1], chunk[-1][2], text_line))
+                chunk = []
+
+        if chunk:
+            text_line = ' '.join(w for w, _, _ in chunk)
+            subtitles.append((chunk[0][1], chunk[-1][2], text_line))
+
+        # Write SRT
+        with open(srt_file, "w", encoding="utf-8") as f:
+            for idx, (start, end, line) in enumerate(subtitles):
+                f.write(f"{idx + 1}\n")
+                f.write(f"{_format_srt_timestamp(start)} --> {_format_srt_timestamp(end)}\n")
+                f.write(f"{line}\n\n")
+
+        print(f"SRT written to {srt_file}, Audio to {audio_file}")
+        return audio_duration
+    except Exception as e:
+        print(f"Error during synthesis: {str(e)}")
 
 
 def _format_text(text: str) -> str:
