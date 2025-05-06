@@ -9,7 +9,8 @@ from src.config import config
 from src.constants.enums import TaskStatus, StopAt
 from src.crud.task_crud import TaskCrud
 from src.models.schema import VideoConcatMode, VideoRequest, AudioRequest, SubtitleRequest
-from src.services import llm, material, subtitle, video, voice
+from src.services import llm, material, subtitle, video
+from src.services.voice_service import azure_tts_v2, get_audio_duration, create_subtitle
 from src.utils import utils
 
 
@@ -73,10 +74,10 @@ def save_script_data(task_id, video_script, video_terms, params):
 def generate_audio(task_id, params, video_script):
     logger.info("\n\n## generating audio")
     audio_file = path.join(utils.task_dir(task_id), "audio.mp3")
-    sub_maker = voice.tts(
+    sub_maker = azure_tts_v2(
         text=video_script,
-        voice_name=voice.parse_voice_name(params.voice_name),
-        voice_rate=params.voice_rate,
+        voice_name=params.voice_name,
+        # voice_rate=params.voice_rate,
         voice_file=audio_file,
     )
     if sub_maker is None:
@@ -89,7 +90,7 @@ def generate_audio(task_id, params, video_script):
         )
         return None, None, None
 
-    audio_duration = math.ceil(voice.get_audio_duration(sub_maker))
+    audio_duration = math.ceil(get_audio_duration(sub_maker))
     return audio_file, audio_duration, sub_maker
 
 
@@ -103,7 +104,7 @@ def generate_subtitle(task_id, params, video_script, sub_maker, audio_file):
 
     subtitle_fallback = False
     if subtitle_provider == "edge":
-        voice.create_subtitle(
+        create_subtitle(
             text=video_script, sub_maker=sub_maker, subtitle_file=subtitle_path
         )
         if not os.path.exists(subtitle_path):
@@ -214,7 +215,44 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
     if stop_at == StopAt.SCRIPT:
         return {"id": task_id, "script": video_script}
 
-    # 2. Generate terms
+    # 2. Generate audio
+    audio_file, audio_duration, sub_maker = generate_audio(
+        task_id, params, video_script
+    )
+
+    if not audio_file:
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate audio error.")
+        return
+
+    TaskCrud.update_task(task_id, TaskStatus.AUDIO_GENERATED, {
+        "id": task_id,
+        "script": video_script,
+        "audio_file": audio_file,
+        "audio_duration": audio_duration
+    })
+
+    if stop_at == StopAt.AUDIO:
+        return {"id": task_id, "audio_file": audio_file, "audio_duration": audio_duration}
+
+    # 3. Generate subtitle
+    subtitle_path = generate_subtitle(
+        task_id, params, video_script, sub_maker, audio_file
+    )
+    TaskCrud.update_task(task_id, TaskStatus.SUBTITLE_GENERATED, {
+        "id": task_id,
+        "script": video_script,
+        "audio_file": audio_file,
+        "audio_duration": audio_duration,
+        "subtitle_path": subtitle_path
+    })
+
+    if stop_at == StopAt.SUBTITLE:
+        return {"id": task_id, "subtitle_path": subtitle_path}
+
+    if type(params.video_concat_mode) is str:
+        params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
+
+    # 4. Generate terms
     video_terms = ""
     if params.video_source != "local":
         video_terms = generate_terms(task_id, params, video_script)
@@ -227,45 +265,6 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
 
     if stop_at == StopAt.TERMS:
         return {"id": task_id, "script": video_script, "terms": video_terms}
-
-    # 3. Generate audio
-    audio_file, audio_duration, sub_maker = generate_audio(
-        task_id, params, video_script
-    )
-
-    if not audio_file:
-        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate audio error.")
-        return
-
-    TaskCrud.update_task(task_id, TaskStatus.AUDIO_GENERATED, {
-        "id": task_id,
-        "script": video_script,
-        "terms": video_terms,
-        "audio_file": audio_file,
-        "audio_duration": audio_duration
-    })
-
-    if stop_at == StopAt.AUDIO:
-        return {"id": task_id, "audio_file": audio_file, "audio_duration": audio_duration}
-
-    # 4. Generate subtitle
-    subtitle_path = generate_subtitle(
-        task_id, params, video_script, sub_maker, audio_file
-    )
-    TaskCrud.update_task(task_id, TaskStatus.SUBTITLE_GENERATED, {
-        "id": task_id,
-        "script": video_script,
-        "terms": video_terms,
-        "audio_file": audio_file,
-        "audio_duration": audio_duration,
-        "subtitle_path": subtitle_path
-    })
-
-    if stop_at == StopAt.SUBTITLE:
-        return {"id": task_id, "subtitle_path": subtitle_path}
-
-    if type(params.video_concat_mode) is str:
-        params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
 
     # 5. Get video materials
     downloaded_videos = get_video_materials(

@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from src.models.schema import VoiceParams, VoiceOut
-from src.services.voice import get_azure_voices, get_azure_voice_locales
+from src.services.voice_service import get_azure_voices, get_azure_voice_locales
 
 router = APIRouter(tags=["Voices"], prefix="/voices")
 
