@@ -59,42 +59,27 @@ def generate_terms(task_id, params, video_script):
     return video_terms
 
 
-def save_script_data(task_id, video_script, video_terms, params):
-    script_file = path.join(utils.task_dir(task_id), "script.json")
-    script_data = {
-        "script": video_script,
-        "search_terms": video_terms,
-        "params": params,
-    }
-
-    with open(script_file, "w", encoding="utf-8") as f:
-        f.write(utils.to_json(script_data))
-
-
 def generate_audio(task_id, params, video_script):
     logger.info("\n\n## generating audio")
     audio_file = path.join(utils.task_dir(task_id), "audio.mp3")
-    srt_file = path.join(utils.task_dir(task_id), "subtitle.srt")
-    audio_duration = azure_tts_generate_with_srt(
+    sub_maker = azure_tts_v2(
         text=video_script,
         voice_name=params.voice_name,
-        audio_file=audio_file,
-        srt_file=srt_file,
+        voice_file=audio_file,
     )
-    if not audio_duration:
+
+    if sub_maker is None:
+        TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate audio.")
+        logger.error(
+            """failed to generate audio:
+1. check if the language of the voice matches the language of the video script.
+2. check if the network is available. If you are in China, it is recommended to use a VPN and enable the global traffic mode.
+        """.strip()
+        )
         return None, None, None
 
-#     if sub_maker is None:
-#         TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="failed to generate audio.")
-#         logger.error(
-#             """failed to generate audio:
-# 1. check if the language of the voice matches the language of the video script.
-# 2. check if the network is available. If you are in China, it is recommended to use a VPN and enable the global traffic mode.
-#         """.strip()
-#         )
-#         return None, None, None
-
-    return audio_file, audio_duration, srt_file
+    audio_duration = get_audio_duration(sub_maker)
+    return audio_file, audio_duration, sub_maker
 
 
 def generate_subtitle(task_id, params, video_script, sub_maker, audio_file):
@@ -219,7 +204,7 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
         return {"id": task_id, "script": video_script}
 
     # 2. Generate audio
-    audio_file, audio_duration, subtitle_path = generate_audio(
+    audio_file, audio_duration, sub_maker = generate_audio(
         task_id, params, video_script
     )
 
@@ -232,14 +217,12 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
         "script": video_script,
         "audio_file": audio_file,
         "audio_duration": audio_duration,
-        "subtitle_path": subtitle_path
     })
 
     if stop_at == StopAt.AUDIO:
         return {"id": task_id, "audio_file": audio_file, "audio_duration": audio_duration}
 
     # 3. Generate subtitle
-    """
     subtitle_path = generate_subtitle(
         task_id, params, video_script, sub_maker, audio_file
     )
@@ -253,7 +236,7 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
 
     if stop_at == StopAt.SUBTITLE:
         return {"id": task_id, "subtitle_path": subtitle_path}
-    """
+
     if type(params.video_concat_mode) is str:
         params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
 
@@ -265,8 +248,14 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
             TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate video terms error.")
             return
 
-    save_script_data(task_id, video_script, video_terms, params)
-    TaskCrud.update_task(task_id, TaskStatus.TERMS_GENERATED, {"script": video_script, "terms": video_terms})
+    TaskCrud.update_task(task_id, TaskStatus.TERMS_GENERATED, {
+        "id": task_id,
+        "script": video_script,
+        "audio_file": audio_file,
+        "audio_duration": audio_duration,
+        "subtitle_path": subtitle_path,
+        "terms": video_terms,
+    })
 
     if stop_at == StopAt.TERMS:
         return {"id": task_id, "script": video_script, "terms": video_terms}

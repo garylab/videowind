@@ -94,7 +94,7 @@ class SubtitleRequest(AudioRequest):
 
 class VideoRequest(SubtitleRequest):
     video_subject: str
-    video_terms: Optional[str | list] = None  # Keywords used to generate the video
+    video_terms: Optional[str] = ""
     video_source: Optional[str] = "pexels"
     video_aspect: Optional[VideoAspect] = VideoAspect.portrait.value
     video_concat_mode: Optional[VideoConcatMode] = VideoConcatMode.random.value
