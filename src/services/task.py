@@ -77,7 +77,6 @@ def generate_audio(task_id, params, video_script):
     sub_maker = azure_tts_v2(
         text=video_script,
         voice_name=params.voice_name,
-        # voice_rate=params.voice_rate,
         voice_file=audio_file,
     )
     if sub_maker is None:
@@ -313,12 +312,3 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
     TaskCrud.update_task(task_id, TaskStatus.FINAL_VIDEO_GENERATED, result)
     return result
 
-
-if __name__ == "__main__":
-    task_id = "task_id"
-    params = VideoRequest(
-        video_subject="金钱的作用",
-        voice_name="zh-CN-XiaoyiNeural-Female",
-        voice_rate=1.0,
-    )
-    start(task_id, params, stop_at=StopAt.VIDEO)

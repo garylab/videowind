@@ -76,11 +76,9 @@ class AudioRequest(BaseModel):
     video_language: Optional[str] = ""
     voice_name: Optional[str] = "zh-CN-XiaoxiaoNeural-Female"
     voice_volume: Optional[float] = 1.0
-    voice_rate: Optional[float] = 1.2
     bgm_type: Optional[str] = "random"
     bgm_file: Optional[str] = ""
     bgm_volume: Optional[float] = 0.2
-    video_source: Optional[str] = "pexels"
 
 
 class SubtitleRequest(AudioRequest):
@@ -97,6 +95,7 @@ class SubtitleRequest(AudioRequest):
 class VideoRequest(SubtitleRequest):
     video_subject: str
     video_terms: Optional[str | list] = None  # Keywords used to generate the video
+    video_source: Optional[str] = "pexels"
     video_aspect: Optional[VideoAspect] = VideoAspect.portrait.value
     video_concat_mode: Optional[VideoConcatMode] = VideoConcatMode.random.value
     video_transition_mode: Optional[VideoTransitionMode] = None
