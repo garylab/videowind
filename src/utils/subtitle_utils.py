@@ -1,24 +1,10 @@
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy import CompositeVideoClip
 from moviepy import TextClip, VideoFileClip
-from pydantic import BaseModel
 from PIL import ImageFont
 
-
-class SubtitleStyle(BaseModel):
-    position: str
-    custom_position: int
-    font_path: str
-    font_size: int
-    text_fore_color: str
-    text_background_color: str
-    stroke_color: str
-    stroke_width: int
-
-
-class VideoDimension(BaseModel):
-    width: int
-    height: int
+from src.constants.enums import SubtitlePosition
+from src.models.schema import VideoDimension, SubtitleStyle
 
 
 def add_subtitle(video_clip: VideoFileClip, video_dimension: VideoDimension,  subtitle_path: str, sub_style: SubtitleStyle):
@@ -64,11 +50,11 @@ def create_text_clip(subtitle_item, video_dimension: VideoDimension, sub_style: 
     _clip = _clip.with_end(subtitle_item[0][1])
     _clip = _clip.with_duration(duration)
 
-    if sub_style.position == "bottom":
+    if sub_style.position == SubtitlePosition.BOTTOM:
         _clip = _clip.with_position(("center", video_dimension.height * 0.95 - _clip.h))
-    elif sub_style.position == "top":
+    elif sub_style.position == SubtitlePosition.TOP:
         _clip = _clip.with_position(("center", video_dimension.height * 0.05))
-    elif sub_style.position == "custom":
+    elif sub_style.position == SubtitlePosition.CUSTOM:
         # Ensure the subtitle is fully within the screen bounds
         margin = 10  # Additional margin, in pixels
         max_y = video_dimension.height - _clip.h - margin

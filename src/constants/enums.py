@@ -32,3 +32,10 @@ class PostStatus(StrEnum):
 class GenderType(StrEnum):
     MALE = "Male"
     FEMALE = "Female"
+
+
+class SubtitlePosition(StrEnum):
+    TOP = "TOP"
+    MIDDLE = "MIDDLE"   # fallback option
+    BOTTOM = "BOTTOM"
+    CUSTOM = "CUSTOM"

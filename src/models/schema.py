@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Union
 import pydantic
 from pydantic import BaseModel
 
-from src.constants.enums import GenderType
+from src.constants.enums import GenderType, SubtitlePosition
 
 # 忽略 Pydantic 的特定警告
 warnings.filterwarnings(
@@ -82,14 +82,14 @@ class AudioRequest(BaseModel):
 
 
 class SubtitleRequest(AudioRequest):
-    subtitle_position: Optional[str] = "bottom"
+    subtitle_enabled: bool = True
+
     font_name: Optional[str] = "JosefinSans-Light.ttf"
     text_fore_color: Optional[str] = "#FFFFFF"
     text_background_color: Optional[str] = "#333333"
     font_size: int = 60
     stroke_color: Optional[str] = "#000000"
-    stroke_width: float = 1.5
-    subtitle_enabled: Optional[bool] = True
+    stroke_width: int = 2
 
 
 class VideoRequest(SubtitleRequest):
@@ -105,9 +105,26 @@ class VideoRequest(SubtitleRequest):
         None  # Materials used to generate the video
     )
 
-    custom_position: float = 70.0
+    subtitle_position: SubtitlePosition = SubtitlePosition.BOTTOM
+    subtitle_custom_position: int = 70
     n_threads: Optional[int] = 2
     paragraph_number: Optional[int] = 1
+
+
+class SubtitleStyle(BaseModel):
+    position: SubtitlePosition
+    custom_position: int
+    font_path: str
+    font_size: int
+    text_fore_color: str
+    text_background_color: str
+    stroke_color: str
+    stroke_width: int
+
+
+class VideoDimension(BaseModel):
+    width: int
+    height: int
 
 
 class VoiceParams(BaseModel):

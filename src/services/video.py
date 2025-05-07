@@ -223,13 +223,13 @@ def generate_video(
         dimension = VideoDimension(width=video_width, height=video_height)
         sub_style = SubtitleStyle(
             position=params.subtitle_position,
-            custom_position=int(params.custom_position),
+            custom_position=params.subtitle_custom_position,
             font_path=font_path,
             font_size=params.font_size,
             text_fore_color=params.text_fore_color,
             text_background_color=params.text_background_color,
             stroke_color=params.stroke_color,
-            stroke_width=int(params.stroke_width),
+            stroke_width=params.stroke_width,
         )
         add_subtitle(video_clip, dimension, subtitle_path, sub_style)
 
