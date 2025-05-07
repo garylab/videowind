@@ -35,8 +35,7 @@ def create_subtitle(body: SubtitleRequest, background_tasks: BackgroundTasks):
 @router.post("/videos", response_model=TaskIdOut, summary="Generate audio, subtitle and video task")
 def create_video(body: VideoRequest, background_tasks: BackgroundTasks):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.VIDEO)
-    #background_tasks.add_task(task_service.start, task_id, body, StopAt.VIDEO)
-    task_service.start(task_id, body, StopAt.VIDEO)
+    background_tasks.add_task(task_service.start, task_id, body, StopAt.VIDEO)
     return TaskIdOut(task_id=task_id)
 
 

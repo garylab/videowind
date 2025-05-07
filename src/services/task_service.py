@@ -238,7 +238,7 @@ class TaskService:
         # 4. Generate terms
         video_terms = ""
         if params.video_source != "local":
-            video_terms = self.generate_terms(task_id, params, video_script)
+            video_terms = self._generate_terms(task_id, params, video_script)
             if not video_terms:
                 TaskCrud.update_task(task_id, TaskStatus.FAILED, failed_reason="Generate video terms error.")
                 return
