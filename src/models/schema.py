@@ -86,7 +86,7 @@ class SubtitleRequest(AudioRequest):
 
     font_name: Optional[str] = "JosefinSans-Light.ttf"
     text_fore_color: Optional[str] = "#FFFFFF"
-    text_background_color: Optional[str] = "#333333"
+    text_background_color: Optional[str] = ""
     font_size: int = 60
     stroke_color: Optional[str] = "#000000"
     stroke_width: int = 2
