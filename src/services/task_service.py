@@ -116,7 +116,7 @@ class TaskService:
     def _get_video_materials(self, task_id, params, video_terms, audio_duration):
         if params.video_source == "local":
             logger.info("\n\n## preprocess local materials")
-            materials = video.preprocess_video(
+            materials = video_service.preprocess_video(
                 materials=params.video_materials, clip_duration=params.video_clip_duration
             )
             if not materials:
