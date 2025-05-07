@@ -2,7 +2,7 @@ import glob
 import os
 import random
 from typing import List
-
+from moviepy import Clip, vfx
 from loguru import logger
 from moviepy import (
     AudioFileClip,
@@ -23,7 +23,6 @@ from src.models.schema import (
     VideoRequest,
     VideoTransitionMode,
 )
-from src.services.utils import video_effects
 from src.utils import utils
 from src.utils.subtitle_utils import add_subtitle, VideoDimension, SubtitleStyle
 
@@ -140,19 +139,19 @@ def combine_videos(
             if video_transition_mode.value == VideoTransitionMode.none.value:
                 clip = clip
             elif video_transition_mode.value == VideoTransitionMode.fade_in.value:
-                clip = video_effects.fadein_transition(clip, 1)
+                clip = fadein_transition(clip, 1)
             elif video_transition_mode.value == VideoTransitionMode.fade_out.value:
-                clip = video_effects.fadeout_transition(clip, 1)
+                clip = fadeout_transition(clip, 1)
             elif video_transition_mode.value == VideoTransitionMode.slide_in.value:
-                clip = video_effects.slidein_transition(clip, 1, shuffle_side)
+                clip = slidein_transition(clip, 1, shuffle_side)
             elif video_transition_mode.value == VideoTransitionMode.slide_out.value:
-                clip = video_effects.slideout_transition(clip, 1, shuffle_side)
+                clip = slideout_transition(clip, 1, shuffle_side)
             elif video_transition_mode.value == VideoTransitionMode.shuffle.value:
                 transition_funcs = [
-                    lambda c: video_effects.fadein_transition(c, 1),
-                    lambda c: video_effects.fadeout_transition(c, 1),
-                    lambda c: video_effects.slidein_transition(c, 1, shuffle_side),
-                    lambda c: video_effects.slideout_transition(c, 1, shuffle_side),
+                    lambda c: fadein_transition(c, 1),
+                    lambda c: fadeout_transition(c, 1),
+                    lambda c: slidein_transition(c, 1, shuffle_side),
+                    lambda c: slideout_transition(c, 1, shuffle_side),
                 ]
                 shuffle_transition = random.choice(transition_funcs)
                 clip = shuffle_transition(clip)
@@ -231,7 +230,7 @@ def generate_video(
             stroke_color=params.stroke_color,
             stroke_width=params.stroke_width,
         )
-        add_subtitle(video_clip, dimension, subtitle_path, sub_style)
+        video_clip = add_subtitle(video_clip, dimension, subtitle_path, sub_style)
 
     bgm_file = get_bgm_file(bgm_type=params.bgm_type, bgm_file=params.bgm_file)
     if bgm_file:
@@ -309,61 +308,21 @@ def preprocess_video(materials: List[MaterialInfo], clip_duration=4):
     return materials
 
 
-if __name__ == "__main__":
-    m = MaterialInfo()
-    m.url = "/Users/harry/Downloads/IMG_2915.JPG"
-    m.provider = "local"
-    materials = preprocess_video([m], clip_duration=4)
-    print(materials)
+# FadeIn
+def fadein_transition(clip: Clip, t: float) -> Clip:
+    return clip.with_effects([vfx.FadeIn(t)])
 
-    # txt_en = "Here's your guide to travel hacks for budget-friendly adventures"
-    # txt_zh = "测试长字段这是您的旅行技巧指南帮助您进行预算友好的冒险"
-    # font = utils.resource_dir() + "/fonts/STHeitiMedium.ttc"
-    # for txt in [txt_en, txt_zh]:
-    #     t, h = wrap_text(text=txt, max_width=1000, font=font, fontsize=60)
-    #     print(t)
-    #
-    # task_id = "aa563149-a7ea-49c2-b39f-8c32cc225baf"
-    # task_dir = utils.task_dir(task_id)
-    # video_file = f"{task_dir}/combined-1.mp4"
-    # audio_file = f"{task_dir}/audio.mp3"
-    # subtitle_file = f"{task_dir}/subtitle.srt"
-    # output_file = f"{task_dir}/final.mp4"
-    #
-    # # video_paths = []
-    # # for file in os.listdir(utils.storage_dir("test")):
-    # #     if file.endswith(".mp4"):
-    # #         video_paths.append(os.path.join(utils.storage_dir("test"), file))
-    # #
-    # # combine_videos(combined_video_path=video_file,
-    # #                audio_file=audio_file,
-    # #                video_paths=video_paths,
-    # #                video_aspect=VideoAspect.portrait,
-    # #                video_concat_mode=VideoConcatMode.random,
-    # #                max_clip_duration=5,
-    # #                threads=2)
-    #
-    # cfg = VideoParams()
-    # cfg.video_aspect = VideoAspect.portrait
-    # cfg.font_name = "STHeitiMedium.ttc"
-    # cfg.font_size = 60
-    # cfg.stroke_color = "#000000"
-    # cfg.stroke_width = 1.5
-    # cfg.text_fore_color = "#FFFFFF"
-    # cfg.text_background_color = "transparent"
-    # cfg.bgm_type = "random"
-    # cfg.bgm_file = ""
-    # cfg.bgm_volume = 1.0
-    # cfg.subtitle_enabled = True
-    # cfg.subtitle_position = "bottom"
-    # cfg.n_threads = 2
-    # cfg.paragraph_number = 1
-    #
-    # cfg.voice_volume = 1.0
-    #
-    # generate_video(video_path=video_file,
-    #                audio_path=audio_file,
-    #                subtitle_path=subtitle_file,
-    #                output_file=output_file,
-    #                params=cfg
-    #                )
+
+# FadeOut
+def fadeout_transition(clip: Clip, t: float) -> Clip:
+    return clip.with_effects([vfx.FadeOut(t)])
+
+
+# SlideIn
+def slidein_transition(clip: Clip, t: float, side: str) -> Clip:
+    return clip.with_effects([vfx.SlideIn(t, side)])
+
+
+# SlideOut
+def slideout_transition(clip: Clip, t: float, side: str) -> Clip:
+    return clip.with_effects([vfx.SlideOut(t, side)])

@@ -11,30 +11,32 @@ from src.db.models import Task
 from src.models.exception import HttpException
 from src.models.schema import TaskDeletionResponse, TaskIdOut, SubtitleRequest, \
     AudioRequest, TaskStatusOut, TaskOut, TaskLiteOut, VideoRequest
-from src.services.task import start
+from src.services.task_service import TaskService
 from src.utils import utils
 
 router = APIRouter(tags=["Task"], prefix="/tasks")
+task_service = TaskService()
 
 
 @router.post("/audio", response_model=TaskIdOut, summary="Generate audio task")
 def create_audio(body: AudioRequest, background_tasks: BackgroundTasks):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.AUDIO)
-    background_tasks.add_task(start, task_id, body, StopAt.AUDIO)
+    background_tasks.add_task(task_service.start, task_id, body, StopAt.AUDIO)
     return TaskIdOut(task_id=task_id)
 
 
 @router.post("/subtitle", response_model=TaskIdOut, summary="Generate audio and subtitle task")
 def create_subtitle(body: SubtitleRequest, background_tasks: BackgroundTasks):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.SUBTITLE)
-    background_tasks.add_task(start, task_id, body, StopAt.SUBTITLE)
+    background_tasks.add_task(task_service.start, task_id, body, StopAt.SUBTITLE)
     return TaskIdOut(task_id=task_id)
 
 
 @router.post("/videos", response_model=TaskIdOut, summary="Generate audio, subtitle and video task")
 def create_video(body: VideoRequest, background_tasks: BackgroundTasks):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.VIDEO)
-    background_tasks.add_task(start, task_id, body, StopAt.VIDEO)
+    #background_tasks.add_task(task_service.start, task_id, body, StopAt.VIDEO)
+    task_service.start(task_id, body, StopAt.VIDEO)
     return TaskIdOut(task_id=task_id)
 
 

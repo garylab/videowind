@@ -1,0 +1,8 @@
+1
+00:00:00,050 --> 00:00:02,788
+Wise men speak because they have something to say
+
+2
+00:00:02,888 --> 00:00:05,074
+fools because they have to say something
+
