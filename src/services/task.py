@@ -213,8 +213,6 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
         return
 
     TaskCrud.update_task(task_id, TaskStatus.AUDIO_GENERATED, {
-        "id": task_id,
-        "script": video_script,
         "audio_file": audio_file,
         "audio_duration": audio_duration,
     })
@@ -227,8 +225,6 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
         task_id, params, video_script, sub_maker, audio_file
     )
     TaskCrud.update_task(task_id, TaskStatus.SUBTITLE_GENERATED, {
-        "id": task_id,
-        "script": video_script,
         "audio_file": audio_file,
         "audio_duration": audio_duration,
         "subtitle_path": subtitle_path
@@ -249,8 +245,6 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
             return
 
     TaskCrud.update_task(task_id, TaskStatus.TERMS_GENERATED, {
-        "id": task_id,
-        "script": video_script,
         "audio_file": audio_file,
         "audio_duration": audio_duration,
         "subtitle_path": subtitle_path,
@@ -269,8 +263,6 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
         return
 
     TaskCrud.update_task(task_id, TaskStatus.CLIPS_DOWNLOADED, {
-        "id": task_id,
-        "script": video_script,
         "terms": video_terms,
         "audio_file": audio_file,
         "audio_duration": audio_duration,
@@ -294,10 +286,8 @@ def start(task_id: str, params: Union[VideoRequest, AudioRequest, SubtitleReques
     )
 
     result = {
-        "id": task_id,
         "videos": final_video_paths,
         "combined_videos": combined_video_paths,
-        "script": video_script,
         "terms": video_terms,
         "audio_file": audio_file,
         "audio_duration": audio_duration,
