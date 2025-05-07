@@ -39,7 +39,7 @@ def create_text_clip(subtitle_item, video_dimension: VideoDimension, sub_style: 
         font=sub_style.font_path,
         font_size=sub_style.font_size,
         color=sub_style.text_fore_color,
-        bg_color=sub_style.text_background_color,
+        bg_color=sub_style.text_background_color.strip() or None,
         stroke_color=sub_style.stroke_color,
         stroke_width=sub_style.stroke_width,
         interline=interline,
