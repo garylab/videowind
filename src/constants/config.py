@@ -1,11 +1,13 @@
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+from src.constants.consts import PROJECT_DIR
 from src.utils.env_utils import get_bool, get_int, get_str
 
-load_dotenv()
+load_dotenv(PROJECT_DIR.joinpath(".env").as_posix())
 
 
 @dataclass
@@ -31,8 +33,7 @@ class DbConfig:
 
 @dataclass
 class DirConfig:
-    root_dir: Path = Path(__file__).parent.parent.parent
-    storage_dir: Path = root_dir.joinpath("storage")
+    storage_dir: Path = PROJECT_DIR.joinpath("storage")
 
 
 @dataclass
