@@ -1,12 +1,14 @@
 import os
 import shutil
-from fastapi import Depends, Path, Request, BackgroundTasks
+from fastapi import Depends, Path, Request
 from loguru import logger
 from fastapi_pagination import Params, Page
 from fastapi import APIRouter
 
+from src.constants.consts import TASK_QUEUE_NAME
 from src.constants.enums import StopAt
 from src.crud.task_crud import TaskCrud
+from src.db.connection import pgmq
 from src.db.models import Task
 from src.models.exception import HttpException
 from src.models.schema import TaskDeletionResponse, TaskIdOut, SubtitleRequest, \
@@ -19,23 +21,23 @@ task_service = TaskService()
 
 
 @router.post("/audio", response_model=TaskIdOut, summary="Generate audio task")
-def create_audio(body: AudioRequest, background_tasks: BackgroundTasks):
+async def create_audio(body: AudioRequest):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.AUDIO)
-    background_tasks.add_task(task_service.start, task_id, body, StopAt.AUDIO)
+    pgmq.send(TASK_QUEUE_NAME, {"task_id": task_id})
     return TaskIdOut(task_id=task_id)
 
 
 @router.post("/subtitle", response_model=TaskIdOut, summary="Generate audio and subtitle task")
-def create_subtitle(body: SubtitleRequest, background_tasks: BackgroundTasks):
+def create_subtitle(body: SubtitleRequest):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.SUBTITLE)
-    background_tasks.add_task(task_service.start, task_id, body, StopAt.SUBTITLE)
+    pgmq.send(TASK_QUEUE_NAME, {"task_id": task_id})
     return TaskIdOut(task_id=task_id)
 
 
 @router.post("/videos", response_model=TaskIdOut, summary="Generate audio, subtitle and video task")
-def create_video(body: VideoRequest, background_tasks: BackgroundTasks):
+def create_video(body: VideoRequest):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.VIDEO)
-    background_tasks.add_task(task_service.start, task_id, body, StopAt.VIDEO)
+    pgmq.send(TASK_QUEUE_NAME, {"task_id": task_id})
     return TaskIdOut(task_id=task_id)
 
 

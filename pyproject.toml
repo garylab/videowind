@@ -27,8 +27,8 @@ dependencies = [
     "pyyaml==6.0.2",
     "requests>=2.32.3",
     "sqlalchemy==2.0.39",
-    "streamlit==1.43.1",
-    "streamlit-authenticator==0.4.1",
+    "tembo-pgmq-python>=0.10.0",
+    "toml>=0.10.2",
     "uuid6>=2024.7.10",
     "uvicorn==0.32.1",
 ]

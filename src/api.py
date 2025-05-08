@@ -1,5 +1,7 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
+from typing import List
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -11,15 +13,31 @@ import uvicorn
 from src.controllers import ping_router
 from src.controllers.exception_handlers import exception_handler, validation_exception_handler
 from src.controllers.v1 import llm_router, task_router, music_router, download_router, voice_router
+from src.db.connection import engine, create_tables, init_pgmq
 from src.models.exception import HttpException
 from src.utils import utils
 from src.constants.config import AppConfig
+from src.worker.task_worker import consume_messages
+
+stop_event = asyncio.Event()
+background_tasks: List[asyncio.Task] = []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("start lifespan")
+    create_tables()
+    init_pgmq()
+    background_tasks.append(asyncio.create_task(consume_messages()))
+    logger.info("started lifespan")
+
     yield
-    logger.info("end lifespan")
+
+    for task in background_tasks:
+        task.cancel()
+    if background_tasks:
+        await asyncio.gather(*background_tasks, return_exceptions=True)
+
+    engine.dispose()
+    logger.info("ended lifespan")
 
 app = FastAPI(
     title=AppConfig.name,

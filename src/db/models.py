@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from uuid6 import uuid7
 from src.constants.enums import TaskStatus
-from src.db.connection import Base, create_tables
+from src.db.connection import Base
 from src.utils.date_utils import get_now
 
 
@@ -10,8 +10,8 @@ class BaseModel(Base):
     __abstract__ = True
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7, unique=True, nullable=False)
-    created_at = Column(DateTime, default=get_now)
-    updated_at = Column(DateTime, default=get_now, onupdate=get_now)
+    created_at = Column(DateTime(timezone=True), default=get_now)
+    updated_at = Column(DateTime(timezone=True), default=get_now, onupdate=get_now)
 
 
 class Task(BaseModel):
@@ -72,6 +72,3 @@ class WordpressPost(BaseModel):
 
     status = Column(Integer, default=TaskStatus.INIT.value)
 
-
-if __name__ == '__main__':
-    create_tables()
