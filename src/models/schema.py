@@ -139,6 +139,7 @@ class VoiceOut(BaseModel):
     SampleRateHertz: str
     Gender: str
     Locale: str
+    WordsPerMinute: Optional[int] = None
 
 
 class VideoScriptParams:
