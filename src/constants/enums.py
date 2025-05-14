@@ -33,6 +33,10 @@ class GenderType(StrEnum):
     MALE = "Male"
     FEMALE = "Female"
 
+class VoiceType(StrEnum):
+    NEURAL = "Neural"
+    MULTILINGUAL_NEURAL = "MultilingualNeural"
+
 
 class SubtitlePosition(StrEnum):
     TOP = "TOP"

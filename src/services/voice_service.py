@@ -14,9 +14,10 @@ from moviepy.video.tools import subtitles
 import azure.cognitiveservices.speech as speechsdk
 
 from src.config import config
-from src.constants.config import AiConfig
+from src.constants.config import AiConfig, DirConfig
 from src.models.schema import VoiceOut
 from src.utils import utils
+from src.utils.file_utils import write_json
 
 
 @lru_cache(maxsize=5)
@@ -24,7 +25,9 @@ def get_azure_voices() -> List[VoiceOut]:
     tts_base_url = f"https://{AiConfig.azure_speech_region}.tts.speech.microsoft.com/cognitiveservices"
     tts_headers = {"Ocp-Apim-Subscription-Key": AiConfig.azure_speech_key}
     response = requests.get(f'{tts_base_url}/voices/list', headers=tts_headers)
-    return [VoiceOut(**d) for d in response.json()]
+    data = response.json()
+    asyncio.run(write_json(DirConfig.storage_dir.joinpath("voices/azure-voices.json"), data))
+    return [VoiceOut(**d) for d in data]
 
 
 @lru_cache(maxsize=5)
@@ -33,8 +36,6 @@ def get_azure_voice_locales() -> List[str]:
     locales = set()
     for v in voices:
         locales.add(v.Locale)
-        if v.SecondaryLocaleList:
-            locales.update(v.SecondaryLocaleList)
 
     return sorted(list(locales))
 

@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Union
 import pydantic
 from pydantic import BaseModel
 
-from src.constants.enums import GenderType, SubtitlePosition
+from src.constants.enums import GenderType, SubtitlePosition, VoiceType
 
 # 忽略 Pydantic 的特定警告
 warnings.filterwarnings(
@@ -129,6 +129,7 @@ class VideoDimension(BaseModel):
 
 class VoiceParams(BaseModel):
     q: Optional[str] = None
+    type: Optional[VoiceType] = None
     locale: Optional[str] = None
     gender: Optional[GenderType] = None
 
@@ -138,7 +139,6 @@ class VoiceOut(BaseModel):
     SampleRateHertz: str
     Gender: str
     Locale: str
-    SecondaryLocaleList: List[str] = Field(default_factory=list)
 
 
 class VideoScriptParams:
