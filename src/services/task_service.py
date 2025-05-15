@@ -59,6 +59,13 @@ class TaskService:
 
         return video_terms
 
+    @staticmethod
+    def validate_voice_acceleration(rate) -> str:
+        if re.fullmatch(r"[+-]?\d+%", rate.strip()):
+            return rate.strip()
+
+        logger.warning(f"voice acceleration [{rate}] is not valid, use default [+0%].")
+        return "+0%"
 
     def _generate_audio(self, task_id, params, video_script):
         logger.info("\n\n## generating audio")
@@ -67,6 +74,7 @@ class TaskService:
             text=video_script,
             voice_name=params.voice_name,
             voice_file=audio_file,
+            rate=self.validate_voice_acceleration(params.voice_acceleration),
         )
 
         if sub_maker is None:

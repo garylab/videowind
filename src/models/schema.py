@@ -76,6 +76,7 @@ class AudioRequest(BaseModel):
     video_language: Optional[str] = ""
     voice_name: Optional[str] = "en-US-AvaMultilingualNeural"
     voice_volume: Optional[float] = 1.0
+    voice_acceleration: Optional[str] = "+0%"
     bgm_type: Optional[str] = "random"
     bgm_file: Optional[str] = ""
     bgm_volume: Optional[float] = 0.2

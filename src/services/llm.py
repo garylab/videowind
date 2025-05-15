@@ -284,7 +284,7 @@ def generate_script(
 Generate a script for a video, depending on the subject of the video.
 
 ## Constrains:
-1. the script is to be returned as a string with the specified number of paragraphs.
+
 2. do not under any circumstance reference this prompt in your response.
 3. get straight to the point, don't start with unnecessary things like, "welcome to this video".
 4. you must not include any type of markdown or formatting in the script, never use a title.
@@ -295,7 +295,7 @@ Generate a script for a video, depending on the subject of the video.
 
 # Initialization:
 - video subject: {video_subject}
-- number of paragraphs: {paragraph_number}
+
 """.strip()
     if language:
         prompt += f"\n- language: {language}"

@@ -57,7 +57,7 @@ def _format_duration_to_offset(duration) -> int:
     return 0
 
 
-def azure_tts_v2(text: str, voice_name: str, voice_file: str) -> Union[SubMaker, None]:
+def azure_tts_v2(text: str, voice_name: str, voice_file: str, rate: str = "+50%") -> Union[SubMaker, None]:
     text = text.strip()
     sub_maker = SubMaker()
 
@@ -70,40 +70,43 @@ def azure_tts_v2(text: str, voice_name: str, voice_file: str) -> Union[SubMaker,
     try:
         logger.info(f"start, voice name: {voice_name}")
 
-        # Creates an instance of a speech config with specified subscription key and service region.
         audio_config = speechsdk.audio.AudioOutputConfig(filename=voice_file, use_default_speaker=True)
         speech_config = speechsdk.SpeechConfig(subscription=AiConfig.azure_speech_key, region=AiConfig.azure_speech_region)
         speech_config.speech_synthesis_voice_name = voice_name
 
-        speech_config.set_property(property_id=speechsdk.PropertyId.SpeechServiceResponse_RequestWordBoundary,value="true")
-
+        speech_config.set_property(property_id=speechsdk.PropertyId.SpeechServiceResponse_RequestWordBoundary, value="true")
         speech_config.set_speech_synthesis_output_format(
             speechsdk.SpeechSynthesisOutputFormat.Audio48Khz192KBitRateMonoMp3
         )
-        speech_synthesizer = speechsdk.SpeechSynthesizer(
-            audio_config=audio_config, speech_config=speech_config
-        )
-        speech_synthesizer.synthesis_word_boundary.connect(
-            speech_synthesizer_word_boundary_cb
-        )
 
-        result = speech_synthesizer.speak_text_async(text).get()
+        speech_synthesizer = speechsdk.SpeechSynthesizer(audio_config=audio_config, speech_config=speech_config)
+        speech_synthesizer.synthesis_word_boundary.connect(speech_synthesizer_word_boundary_cb)
+
+        # Wrap text in SSML with prosody rate
+        ssml_text = f"""
+        <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+               xmlns:mstts="http://www.w3.org/2001/mstts"
+               xml:lang="en-US">
+          <voice name="{voice_name}">
+            <prosody rate="{rate}">{text}</prosody>
+          </voice>
+        </speak>
+        """
+
+        result = speech_synthesizer.speak_ssml_async(ssml_text).get()
         if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
             logger.success(f"azure v2 speech synthesis succeeded: {voice_file}")
             return sub_maker
         elif result.reason == speechsdk.ResultReason.Canceled:
             cancellation_details = result.cancellation_details
-            logger.error(
-                f"azure v2 speech synthesis canceled: {cancellation_details.reason}"
-            )
+            logger.error(f"azure v2 speech synthesis canceled: {cancellation_details.reason}")
             if cancellation_details.reason == speechsdk.CancellationReason.Error:
-                logger.error(
-                    f"azure v2 speech synthesis error: {cancellation_details.error_details}"
-                )
+                logger.error(f"azure v2 speech synthesis error: {cancellation_details.error_details}")
         logger.info(f"completed, output file: {voice_file}")
     except Exception as e:
         logger.error(f"failed, error: {str(e)}")
     return None
+
 
 def _format_srt_timestamp(ms: int) -> str:
     seconds, millis = divmod(ms, 1000)
