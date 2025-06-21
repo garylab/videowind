@@ -60,3 +60,18 @@ class LlmConfig:
     api_key: str = get_str("LLM_API_KEY", "")
     model_name: str = get_str("LLM_MODEL_NAME", "gpt-4o")
     api_version: str = get_str("LLM_API_VERSION", "2014-01-01")
+
+
+@dataclass
+class ClipProviderConfig:
+    provider: str = get_str("CLIP_PROVIDER", "pexels")
+    pexels_api_key: str = get_str("PEXELS_API_KEY")
+
+
+@dataclass
+class Env:
+    CLIP: ClipProviderConfig = field(default_factory=ClipProviderConfig)
+    LLM: LlmConfig = field(default_factory=LlmConfig)
+
+
+env = Env()

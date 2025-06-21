@@ -8,6 +8,7 @@ from loguru import logger
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from src.config import config
+from src.constants.config import ClipProviderConfig, env
 from src.models.schema import MaterialInfo, VideoAspect, VideoConcatMode
 from src.utils import utils
 
@@ -39,7 +40,7 @@ def search_videos_pexels(
     aspect = VideoAspect(video_aspect)
     video_orientation = aspect.name
     video_width, video_height = aspect.to_resolution()
-    api_key = get_api_key("pexels_api_keys")
+    api_key = env.CLIP.pexels_api_key
     headers = {
         "Authorization": api_key,
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
