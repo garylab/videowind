@@ -18,7 +18,7 @@ class AppConfig:
 
     host = get_str("APP_HOST", "0.0.0.0")
     port = get_int("APP_PORT", 8000)
-    reload = get_bool("APP_RELOAD", True)
+    reload = get_bool("APP_RELOAD", False)
     debug_mode = get_bool("APP_DEBUG_MODE", True)
     tz = get_str("APP_TZ", "UTC")
 
@@ -72,6 +72,7 @@ class ClipProviderConfig:
 
 @dataclass
 class Env:
+    APP: AppConfig = field(default_factory=AppConfig)
     CLIP: ClipProviderConfig = field(default_factory=ClipProviderConfig)
     LLM: LlmConfig = field(default_factory=LlmConfig)
     DIR: DirConfig = field(default_factory=DirConfig)

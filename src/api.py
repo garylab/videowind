@@ -16,7 +16,7 @@ from src.controllers.v1 import llm_router, task_router, music_router, download_r
 from src.db.connection import engine, create_tables, init_pgmq
 from src.models.exception import HttpException
 from src.utils import utils
-from src.constants.config import AppConfig
+from src.constants.config import AppConfig, env
 from src.worker.task_worker import consume_messages
 
 stop_event = asyncio.Event()
@@ -82,8 +82,8 @@ if __name__ == "__main__":
     logger.info(f"start server, docs: http://{AppConfig.host}:{AppConfig.port}/docs")
     uvicorn.run(
         app="src.api:app",
-        host=AppConfig.host,
-        port=AppConfig.port,
-        reload=AppConfig.reload,
+        host=env.APP.host,
+        port=env.APP.port,
+        reload=env.APP.reload,
         log_level="warning",
     )

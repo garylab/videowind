@@ -1,6 +1,7 @@
 import glob
 import os
 import random
+from pathlib import Path
 from typing import List
 from moviepy import Clip, vfx
 from loguru import logger
@@ -28,18 +29,15 @@ from src.utils import utils
 from src.utils.subtitle_utils import add_subtitle, VideoDimension, SubtitleStyle
 
 
-def get_bgm_file(bgm_type: str = "random", bgm_file: str = ""):
-    if not bgm_type:
-        return ""
-
-    if bgm_file and os.path.exists(bgm_file):
-        return bgm_file
-
-    if bgm_type == "random":
-        files = glob.glob(env.DIR.songs.joinpath("*.mp3"))
-        return random.choice(files)
-
-    return ""
+def get_bgm_file(bgm_file: str = "") -> Path | None:
+    if not bgm_file:
+        return None
+    elif bgm_file == "random":
+        # Random
+        files = list(env.DIR.songs.glob("*.mp3"))
+        return random.choice(files) if len(files) > 1 else None
+    else:
+        return env.DIR.songs.joinpath(bgm_file) if env.DIR.songs.joinpath(bgm_file).is_file() else None
 
 
 def combine_videos(
@@ -188,11 +186,9 @@ def generate_video(
     aspect = VideoAspect(params.video_aspect)
     video_width, video_height = aspect.to_resolution()
 
-    logger.info(f"start, video size: {video_width} x {video_height}")
-    logger.info(f"  ① video: {video_path}")
-    logger.info(f"  ② audio: {audio_path}")
-    logger.info(f"  ③ subtitle: {subtitle_path}")
-    logger.info(f"  ④ output: {output_file}")
+    logger.info(f"Started, video size: {video_width} x {video_height}")
+    logger.info(f"Using video: {video_path}")
+    logger.info(f"Using audio: {audio_path}")
 
     # https://github.com/harry0703/MoneyPrinterTurbo/issues/217
     # PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'final-1.mp4.tempTEMP_MPY_wvf_snd.mp3'
@@ -206,7 +202,7 @@ def generate_video(
             if os.name == "nt":
                 font_path = font_path.replace("\\", "/")
 
-        logger.info(f"using font: {font_path}")
+        logger.info(f"Using font: {font_path}")
 
     video_clip = VideoFileClip(video_path)
     audio_clip = AudioFileClip(audio_path).with_effects(
@@ -226,11 +222,14 @@ def generate_video(
             stroke_width=params.stroke_width,
         )
         video_clip = add_subtitle(video_clip, dimension, subtitle_path, sub_style)
+        logger.info(f"Added subtitle: {subtitle_path}")
 
-    bgm_file = get_bgm_file(bgm_type=params.bgm_type, bgm_file=params.bgm_file)
-    if bgm_file:
+    bgm_file = get_bgm_file(bgm_file=params.bgm_file)
+    logger.info(f"Using bgm: {bgm_file}")
+
+    if bgm_file.is_file():
         try:
-            bgm_clip = AudioFileClip(bgm_file).with_effects(
+            bgm_clip = AudioFileClip(bgm_file.as_posix()).with_effects(
                 [
                     afx.MultiplyVolume(params.bgm_volume),
                     afx.AudioFadeOut(3),
@@ -240,6 +239,8 @@ def generate_video(
             audio_clip = CompositeAudioClip([audio_clip, bgm_clip])
         except Exception as e:
             logger.error(f"failed to add bgm: {str(e)}")
+
+        logger.info(f"Added bgm: {bgm_file}")
 
     video_clip = video_clip.with_audio(audio_clip)
     video_clip.write_videofile(

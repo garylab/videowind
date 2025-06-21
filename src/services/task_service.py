@@ -167,7 +167,7 @@ class TaskService:
             combined_video_path = path.join(
                 utils.task_dir(task_id), f"combined-{index}.mp4"
             )
-            logger.info(f"\n\n## combining video: {index} => {combined_video_path}")
+            logger.info(f"Combining video: {index} => {combined_video_path}")
             video_service.combine_videos(
                 combined_video_path=combined_video_path,
                 video_paths=downloaded_videos,
