@@ -15,6 +15,7 @@ from moviepy import (
     concatenate_videoclips,
 )
 
+from src.constants.config import env
 from src.models import const
 from src.models.schema import (
     MaterialInfo,
@@ -35,9 +36,7 @@ def get_bgm_file(bgm_type: str = "random", bgm_file: str = ""):
         return bgm_file
 
     if bgm_type == "random":
-        suffix = "*.mp3"
-        song_dir = utils.song_dir()
-        files = glob.glob(os.path.join(song_dir, suffix))
+        files = glob.glob(env.DIR.songs.joinpath("*.mp3"))
         return random.choice(files)
 
     return ""
@@ -200,18 +199,14 @@ def generate_video(
     # write into the same directory as the output file
     output_dir = os.path.dirname(output_file)
 
-    font_path = ""
+    font_path = None
     if params.subtitle_enabled:
-        if not params.font_name:
-            params.font_name = "STHeitiMedium.ttc"
-        font_path = os.path.join(utils.font_dir(), params.font_name)
-        if os.name == "nt":
-            font_path = font_path.replace("\\", "/")
+        if params.font_name and env.DIR.fonts.joinpath(params.font_name).exists():
+            font_path = env.DIR.fonts.joinpath(params.font_name).as_posix()
+            if os.name == "nt":
+                font_path = font_path.replace("\\", "/")
 
         logger.info(f"using font: {font_path}")
-
-        if not subtitle_path or not os.path.exists(subtitle_path):
-            logger.warning("Subtitle enabled, but no subtitle file found at: %s", subtitle_path)
 
     video_clip = VideoFileClip(video_path)
     audio_clip = AudioFileClip(audio_path).with_effects(

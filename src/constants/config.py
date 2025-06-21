@@ -33,7 +33,9 @@ class DbConfig:
 
 @dataclass
 class DirConfig:
-    storage_dir: Path = PROJECT_DIR.joinpath("storage")
+    storage: Path = PROJECT_DIR.joinpath("storage")
+    fonts: Path = PROJECT_DIR.joinpath("storage").joinpath("fonts")
+    songs: Path = PROJECT_DIR.joinpath("storage").joinpath("songs")
 
 
 @dataclass
@@ -41,7 +43,7 @@ class AiConfig:
     whisper_model: str = get_str("AI_WHISPER_MODEL", "large-v3")
     whisper_device = get_str("AI_WHISPER_DEVICE", "cpu")
     whisper_compute_type = get_str("AI_WHISPER_COMPUTE_TYPE", "int8")
-    whisper_download_dir = get_str("AI_WHISPER_DOWNLOAD_DIR", DirConfig.storage_dir.joinpath(f"models/whisper-large-v3"))
+    whisper_download_dir = get_str("AI_WHISPER_DOWNLOAD_DIR", DirConfig.storage.joinpath(f"models/whisper-large-v3"))
     azure_speech_region = get_str("AZURE_SPEECH_REGION")
     azure_speech_key = get_str("AZURE_SPEECH_KEY")
 
@@ -72,6 +74,7 @@ class ClipProviderConfig:
 class Env:
     CLIP: ClipProviderConfig = field(default_factory=ClipProviderConfig)
     LLM: LlmConfig = field(default_factory=LlmConfig)
+    DIR: DirConfig = field(default_factory=DirConfig)
 
 
 env = Env()

@@ -25,7 +25,7 @@ def test_add_subtitle():
 
     clip = add_subtitle(video_clip, video_dimension, subtitle_path, sub_style)
 
-    expected_output_file = DirConfig.storage_dir.joinpath(f"temp/test_add_subtitle-{test_filename}")
+    expected_output_file = DirConfig.storage.joinpath(f"temp/test_add_subtitle-{test_filename}")
     clip.write_videofile(
         expected_output_file.as_posix(),
         audio_codec="aac",
@@ -46,7 +46,7 @@ def test_add_subtitle2():
 
     clip = add_subtitle(video_clip, video_dimension, subtitle_path, sub_style)
 
-    expected_output_file = DirConfig.storage_dir.joinpath(f"temp/test_add_subtitle2-{test_filename}")
+    expected_output_file = DirConfig.storage.joinpath(f"temp/test_add_subtitle2-{test_filename}")
     clip.write_videofile(
         expected_output_file.as_posix(),
         audio_codec="aac",

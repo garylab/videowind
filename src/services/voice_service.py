@@ -26,7 +26,7 @@ def get_azure_voices() -> List[VoiceOut]:
     tts_headers = {"Ocp-Apim-Subscription-Key": AiConfig.azure_speech_key}
     response = requests.get(f'{tts_base_url}/voices/list', headers=tts_headers)
     data = response.json()
-    asyncio.run(write_json(DirConfig.storage_dir.joinpath("voices/azure-voices.json"), data))
+    asyncio.run(write_json(DirConfig.storage.joinpath("voices/azure-voices.json"), data))
     return [VoiceOut(**d) for d in data]
 
 
