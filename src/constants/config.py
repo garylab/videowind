@@ -73,6 +73,7 @@ class ClipProviderConfig:
 @dataclass
 class Env:
     APP: AppConfig = field(default_factory=AppConfig)
+    DB: DbConfig = field(default_factory=DbConfig)
     CLIP: ClipProviderConfig = field(default_factory=ClipProviderConfig)
     LLM: LlmConfig = field(default_factory=LlmConfig)
     DIR: DirConfig = field(default_factory=DirConfig)
