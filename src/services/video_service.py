@@ -227,7 +227,7 @@ def generate_video(
     bgm_file = get_bgm_file(bgm_file=params.bgm_file)
     logger.info(f"Using bgm: {bgm_file}")
 
-    if bgm_file.is_file():
+    if bgm_file:
         try:
             bgm_clip = AudioFileClip(bgm_file.as_posix()).with_effects(
                 [
