@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -21,6 +20,7 @@ class AppConfig:
     reload = get_bool("APP_RELOAD", False)
     debug_mode = get_bool("APP_DEBUG_MODE", True)
     tz = get_str("APP_TZ", "UTC")
+    log_level = get_str("APP_LOG_LEVEL", "DEBUG")
 
 
 @dataclass
@@ -36,23 +36,18 @@ class DirConfig:
     storage: Path = PROJECT_DIR.joinpath("storage")
     fonts: Path = PROJECT_DIR.joinpath("storage").joinpath("fonts")
     songs: Path = PROJECT_DIR.joinpath("storage").joinpath("songs")
+    clips: Path = PROJECT_DIR.joinpath("storage").joinpath("clips")
 
 
 @dataclass
 class AiConfig:
+    subtitle_provider: str = get_str("AI_SUBTITLE_PROVIDER", "edge")
     whisper_model: str = get_str("AI_WHISPER_MODEL", "large-v3")
     whisper_device = get_str("AI_WHISPER_DEVICE", "cpu")
     whisper_compute_type = get_str("AI_WHISPER_COMPUTE_TYPE", "int8")
     whisper_download_dir = get_str("AI_WHISPER_DOWNLOAD_DIR", DirConfig.storage.joinpath(f"models/whisper-large-v3"))
     azure_speech_region = get_str("AZURE_SPEECH_REGION")
     azure_speech_key = get_str("AZURE_SPEECH_KEY")
-
-
-@dataclass
-class WpConfig:
-    url: str = get_str("WP_URL", "")
-    username: str = get_str("WP_USERNAME", "")
-    password: str = get_str("WP_PASSWORD", "")
 
 
 @dataclass
@@ -68,12 +63,15 @@ class LlmConfig:
 class ClipProviderConfig:
     provider: str = get_str("CLIP_PROVIDER", "pexels")
     pexels_api_key: str = get_str("PEXELS_API_KEY")
+    pixabay_api_key: str = get_str("PIXABAY_API_KEY")
+    proxy: str = get_str("CLIP_DOWNLOAD_PROXY", "")
 
 
 @dataclass
 class Env:
     APP: AppConfig = field(default_factory=AppConfig)
     DB: DbConfig = field(default_factory=DbConfig)
+    AI: AiConfig = field(default_factory=AiConfig)
     CLIP: ClipProviderConfig = field(default_factory=ClipProviderConfig)
     LLM: LlmConfig = field(default_factory=LlmConfig)
     DIR: DirConfig = field(default_factory=DirConfig)

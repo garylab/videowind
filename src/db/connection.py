@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 # from pgmq_sqlalchemy import PGMQueue
 from tembo_pgmq_python import PGMQueue, Message
 
-from src.constants.config import DbConfig, env
+from src.constants.config import env
 from src.constants.consts import TASK_QUEUE_NAME
 
 engine = create_engine(

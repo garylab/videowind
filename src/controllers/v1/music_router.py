@@ -9,7 +9,6 @@ from fastapi.responses import FileResponse, StreamingResponse
 from loguru import logger
 from fastapi_pagination import Params
 from fastapi import APIRouter
-from src.config import config
 from src.constants.enums import StopAt
 from src.crud.task_crud import TaskCrud
 from src.db.models import Task

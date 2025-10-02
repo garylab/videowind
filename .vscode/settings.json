@@ -8,5 +8,9 @@
     "editor.codeActionsOnSave": {
         "source.organizeImports": "explicit"
     },
-    "workbench.colorTheme": "Default Dark Modern"
+    "workbench.colorTheme": "Default Dark Modern",
+    "files.exclude": {
+        "**/.venv": true,
+        "**/venv": true
+    }
 }

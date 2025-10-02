@@ -5,7 +5,7 @@ from os import path
 from typing import Union
 from loguru import logger
 
-from src.config import config
+from src.constants.config import env
 from src.constants.enums import TaskStatus, StopAt
 from src.crud.task_crud import TaskCrud
 from src.models.schema import VideoConcatMode, VideoRequest, AudioRequest, SubtitleRequest
@@ -96,7 +96,7 @@ class TaskService:
             return ""
 
         subtitle_path = path.join(utils.task_dir(task_id), "subtitle.srt")
-        subtitle_provider = config.app.get("subtitle_provider", "").strip().lower()
+        subtitle_provider = env.AI.subtitle_provider.strip().lower()
         logger.info(f"\n\n## generating subtitle, provider: {subtitle_provider}")
 
         subtitle_fallback = False

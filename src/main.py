@@ -16,7 +16,7 @@ from src.controllers.v1 import llm_router, task_router, music_router, download_r
 from src.db.connection import engine, create_tables, init_pgmq
 from src.models.exception import HttpException
 from src.utils import utils
-from src.constants.config import AppConfig, env
+from src.constants.config import env
 from src.worker.task_worker import consume_messages
 
 stop_event = asyncio.Event()
@@ -40,10 +40,10 @@ async def lifespan(app: FastAPI):
     logger.info("ended lifespan")
 
 app = FastAPI(
-    title=AppConfig.name,
-    description=AppConfig.description,
-    version=AppConfig.version,
-    debug=AppConfig.debug_mode,
+    title=env.APP.name,
+    description=env.APP.description,
+    version=env.APP.version,
+    debug=env.APP.debug_mode,
     lifespan=lifespan
 )
 app.include_router(ping_router.router)
@@ -79,11 +79,11 @@ app.mount("/", StaticFiles(directory=public_dir, html=True), name="")
 
 
 if __name__ == "__main__":
-    logger.info(f"start server, docs: http://{AppConfig.host}:{AppConfig.port}/docs")
+    logger.info(f"start server, docs: http://{env.APP.host}:{env.APP.port}/docs")
     uvicorn.run(
-        app="src.api:app",
+        app="src.main:app",
         host=env.APP.host,
         port=env.APP.port,
         reload=env.APP.reload,
-        log_level="warning",
+        log_level=env.APP.log_level,
     )

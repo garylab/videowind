@@ -13,7 +13,6 @@ from loguru import logger
 from moviepy.video.tools import subtitles
 import azure.cognitiveservices.speech as speechsdk
 
-from src.config import config
 from src.constants.config import AiConfig, DirConfig
 from src.models.schema import VoiceOut
 from src.utils import utils

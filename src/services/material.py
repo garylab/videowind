@@ -7,29 +7,11 @@ import requests
 from loguru import logger
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from src.config import config
-from src.constants.config import ClipProviderConfig, env
+from src.constants.config import env
 from src.models.schema import MaterialInfo, VideoAspect, VideoConcatMode
 from src.utils import utils
 
 requested_count = 0
-
-
-def get_api_key(cfg_key: str):
-    api_keys = config.app.get(cfg_key)
-    if not api_keys:
-        raise ValueError(
-            f"\n\n##### {cfg_key} is not set #####\n\nPlease set it in the config.toml file: {config.config_file}\n\n"
-            f"{utils.to_json(config.app)}"
-        )
-
-    # if only one key is provided, return it
-    if isinstance(api_keys, str):
-        return api_keys
-
-    global requested_count
-    requested_count += 1
-    return api_keys[requested_count % len(api_keys)]
 
 
 def search_videos_pexels(
@@ -48,13 +30,13 @@ def search_videos_pexels(
     # Build URL
     params = {"query": search_term, "per_page": 20, "orientation": video_orientation}
     query_url = f"https://api.pexels.com/videos/search?{urlencode(params)}"
-    logger.info(f"searching videos: {query_url}, with proxies: {config.proxy}")
+    logger.info(f"searching videos: {query_url}, with proxies: {env.CLIP.proxy}")
 
     try:
         r = requests.get(
             query_url,
             headers=headers,
-            proxies=config.proxy,
+            proxies=env.CLIP.proxy,
             verify=False,
             timeout=(30, 60),
         )
@@ -98,20 +80,19 @@ def search_videos_pixabay(
 
     video_width, video_height = aspect.to_resolution()
 
-    api_key = get_api_key("pixabay_api_keys")
     # Build URL
     params = {
         "q": search_term,
         "video_type": "all",  # Accepted values: "all", "film", "animation"
         "per_page": 50,
-        "key": api_key,
+        "key": env.CLIP.pixabay_api_key,
     }
     query_url = f"https://pixabay.com/api/videos/?{urlencode(params)}"
-    logger.info(f"searching videos: {query_url}, with proxies: {config.proxy}")
+    logger.info(f"searching videos: {query_url}, with proxies: {env.CLIP.proxy}")
 
     try:
         r = requests.get(
-            query_url, proxies=config.proxy, verify=False, timeout=(30, 60)
+            query_url, proxies=env.CLIP.proxy, verify=False, timeout=(30, 60)
         )
         response = r.json()
         video_items = []
@@ -172,7 +153,7 @@ def save_video(video_url: str, save_dir: str = "") -> str:
             requests.get(
                 video_url,
                 headers=headers,
-                proxies=config.proxy,
+                proxies=env.CLIP.proxy,
                 verify=False,
                 timeout=(60, 240),
             ).content
@@ -230,7 +211,7 @@ def download_videos(
     )
     video_paths = []
 
-    material_directory = config.app.get("material_directory", "").strip()
+    material_directory = env.DIR.clips.as_posix()
     if material_directory == "task":
         material_directory = utils.task_dir(task_id)
     elif material_directory and not os.path.isdir(material_directory):
