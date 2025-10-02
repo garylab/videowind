@@ -20,7 +20,7 @@ class AppConfig:
     reload = get_bool("APP_RELOAD", False)
     debug_mode = get_bool("APP_DEBUG_MODE", True)
     tz = get_str("APP_TZ", "UTC")
-    log_level = get_str("APP_LOG_LEVEL", "DEBUG")
+    log_level = get_str("APP_LOG_LEVEL", "info")
 
 
 @dataclass
@@ -34,8 +34,8 @@ class DbConfig:
 @dataclass
 class DirConfig:
     storage: Path = PROJECT_DIR.joinpath("storage")
-    fonts: Path = PROJECT_DIR.joinpath("storage").joinpath("fonts")
-    songs: Path = PROJECT_DIR.joinpath("storage").joinpath("songs")
+    fonts: Path = PROJECT_DIR.joinpath("storage").joinpath("resource").joinpath("fonts")
+    songs: Path = PROJECT_DIR.joinpath("storage").joinpath("resource").joinpath("songs")
     clips: Path = PROJECT_DIR.joinpath("storage").joinpath("clips")
 
 

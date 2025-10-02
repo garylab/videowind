@@ -8,8 +8,8 @@ from fastapi import APIRouter
 from src.constants.consts import TASK_QUEUE_NAME
 from src.constants.enums import StopAt
 from src.crud.task_crud import TaskCrud
-from src.db.connection import pgmq
 from src.db.models import Task
+from src.services.queue_service import QueueService
 from src.models.exception import HttpException
 from src.models.schema import TaskDeletionResponse, TaskIdOut, SubtitleRequest, \
     AudioRequest, TaskStatusOut, TaskOut, TaskLiteOut, VideoRequest
@@ -23,21 +23,21 @@ task_service = TaskService()
 @router.post("/audio", response_model=TaskIdOut, summary="Generate audio task")
 async def create_audio(body: AudioRequest):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.AUDIO)
-    pgmq.send(TASK_QUEUE_NAME, {"task_id": task_id})
+    QueueService.send(TASK_QUEUE_NAME, {"task_id": task_id})
     return TaskIdOut(task_id=task_id)
 
 
 @router.post("/subtitle", response_model=TaskIdOut, summary="Generate audio and subtitle task")
 def create_subtitle(body: SubtitleRequest):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.SUBTITLE)
-    pgmq.send(TASK_QUEUE_NAME, {"task_id": task_id})
+    QueueService.send(TASK_QUEUE_NAME, {"task_id": task_id})
     return TaskIdOut(task_id=task_id)
 
 
 @router.post("/videos", response_model=TaskIdOut, summary="Generate audio, subtitle and video task")
 def create_video(body: VideoRequest):
     task_id = TaskCrud.add_task(params=body, stop_at=StopAt.VIDEO)
-    pgmq.send(TASK_QUEUE_NAME, {"task_id": task_id})
+    QueueService.send(TASK_QUEUE_NAME, {"task_id": task_id})
     return TaskIdOut(task_id=task_id)
 
 

@@ -13,7 +13,7 @@ import uvicorn
 from src.controllers import ping_router
 from src.controllers.exception_handlers import exception_handler, validation_exception_handler
 from src.controllers.v1 import llm_router, task_router, music_router, download_router, voice_router
-from src.db.connection import engine, create_tables, init_pgmq
+from src.db.connection import engine, create_tables
 from src.models.exception import HttpException
 from src.utils import utils
 from src.constants.config import env
@@ -25,7 +25,6 @@ background_tasks: List[asyncio.Task] = []
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
-    init_pgmq()
     background_tasks.append(asyncio.create_task(consume_messages()))
     logger.info("started lifespan")
 

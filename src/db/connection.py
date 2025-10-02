@@ -1,11 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-# from pgmq_sqlalchemy import PGMQueue
-from tembo_pgmq_python import PGMQueue, Message
 
 from src.constants.config import env
-from src.constants.consts import TASK_QUEUE_NAME
 
 engine = create_engine(
     env.DB.url,
@@ -16,12 +13,6 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-pgmq = PGMQueue(host=engine.url.host,
-                username=engine.url.username,
-                password=engine.url.password,
-                port=str(engine.url.port),
-                database=engine.url.database)
 
 
 def get_db():
@@ -34,10 +25,6 @@ def get_db():
         raise e
     finally:
         db.close()
-
-
-def init_pgmq():
-    pgmq.create_queue(TASK_QUEUE_NAME)
 
 
 def create_tables():

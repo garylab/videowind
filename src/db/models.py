@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, DateTime, JSON, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Text, DateTime, JSON, UniqueConstraint, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from uuid6 import uuid7
 from src.constants.enums import TaskStatus
@@ -56,19 +56,14 @@ class ClipTerm(BaseModel):
     __table_args__ = (UniqueConstraint("clip_id", "term_id"),)
 
 
-class WordpressWebsite(BaseModel):
-    __tablename__ = "wordpress_websites"
+class TaskQueue(BaseModel):
+    __tablename__ = "task_queue"
 
-    url = Column(String(255), nullable=False, unique=True)
-    username = Column(String(50), nullable=False, default="")
-    password = Column(String(50), nullable=False, default="")
-
-
-class WordpressPost(BaseModel):
-    __tablename__ = "wordpress_posts"
-
-    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
-    post_id = Column(UUID(as_uuid=True), nullable=False, unique=True)
-
-    status = Column(Integer, default=TaskStatus.INIT.value)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False, unique=True)
+    message = Column(JSON, nullable=False)
+    processed = Column(Boolean, default=False, nullable=False)
+    processing_started_at = Column(DateTime(timezone=True), nullable=True)
+    processed_at = Column(DateTime(timezone=True), nullable=True)
+    retry_count = Column(Integer, default=0, nullable=False)
+    max_retries = Column(Integer, default=3, nullable=False)
 

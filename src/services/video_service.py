@@ -195,12 +195,20 @@ def generate_video(
     # write into the same directory as the output file
     output_dir = os.path.dirname(output_file)
 
-    font_path = None
+    font_path = "Arial"  # Default system font fallback
     if params.subtitle_enabled:
         if params.font_name and env.DIR.fonts.joinpath(params.font_name).exists():
             font_path = env.DIR.fonts.joinpath(params.font_name).as_posix()
             if os.name == "nt":
                 font_path = font_path.replace("\\", "/")
+        else:
+            # Try default font if specified font not found
+            default_font = "JosefinSans-Light.ttf"
+            if env.DIR.fonts.joinpath(default_font).exists():
+                font_path = env.DIR.fonts.joinpath(default_font).as_posix()
+                if os.name == "nt":
+                    font_path = font_path.replace("\\", "/")
+                logger.warning(f"Font '{params.font_name}' not found, using default: {default_font}")
 
         logger.info(f"Using font: {font_path}")
 
